@@ -5,18 +5,14 @@ import org.openjdk.jmh.util.Statistics;
 
 import java.util.Collection;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static utils.FormatUtils.df;
 
 public class Assertions {
-    public static void assertFalse(String msg, boolean o) {
-        if (o) throw new RuntimeException("assertFalse: " + msg);
-    }
-    public static void assertTrue(String msg, boolean o) {
-        if (!o) throw new RuntimeException("assertTrue: " +msg);
-    }
 
     public static void assertResults(BaselineStatistics baseStatistics, Collection<RunResult> runResults) {
-        Assertions.assertFalse("result set is empty", runResults.isEmpty());
+        assertFalse("result set is empty", runResults.isEmpty());
         for(RunResult runResult : runResults) {
             Assertions.assertResults(baseStatistics, runResult.getPrimaryResult().getStatistics());
         }
@@ -29,6 +25,9 @@ public class Assertions {
         System.out.println("Assert results:");
         System.out.println("Baseline statistics: \n" + baseStatistics +"\n");
         System.out.println("Current  statistics: \n" + new BaselineStatistics(currStatistics) +"\n");
+
+        //make sure we are comparing on same iteration size - default assumes measurementIterations=25
+        assertEquals("measurement iterations differ", baseStatistics.getN(), currStatistics.getN());
 
         final double[] baseCI = baseStatistics.getConfidenceIntervalAt(0.999);
         final double[] currCI = currStatistics.getConfidenceIntervalAt(0.999);
@@ -45,7 +44,7 @@ public class Assertions {
             System.out.println("[x] Mean difference is statistically significant");
         }
 
-        Assertions.assertFalse ("Deviation from mean is statistically significant", deviatedAll);
+        assertFalse ("Deviation from mean is statistically significant", deviatedAll);
 
         if (deviatedFromMean || deviatedFromCI_0 || deviatedFromCI_1) {
             System.out.println("[-] Mean difference is not statistically significant");

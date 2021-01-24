@@ -7,17 +7,23 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 
+import static utils.DefaultProperties.MEASUREMENT_ITERATIONS_DEFAULT;
 import static utils.FormatUtils.df;
 
 public class BaselineStatistics extends ListStatistics {
-    private long N = 25;
+    private long N;
     private double max;
     private double min;
     private double mean;
     private double variance;
 
     public BaselineStatistics(double min, double avg, double max, double stdev) {
+        this(MEASUREMENT_ITERATIONS_DEFAULT, min, avg, max, stdev);
+    }
+
+    public BaselineStatistics(long N, double min, double avg, double max, double stdev) {
         super();
+        this.N = N;
         this.min = min;
         this.mean = avg;
         this.max = max;
@@ -25,12 +31,7 @@ public class BaselineStatistics extends ListStatistics {
     }
 
     public BaselineStatistics(Statistics statistics) {
-        this(statistics.getMin(), statistics.getMean(), statistics.getMax(), statistics.getStandardDeviation());
-    }
-
-    /** by default N = 26 as the number of sampled iterations */
-    public void setN(long n) {
-        N = n;
+        this(statistics.getN(), statistics.getMin(), statistics.getMean(), statistics.getMax(), statistics.getStandardDeviation());
     }
 
     @Override public long getN() { return N;}

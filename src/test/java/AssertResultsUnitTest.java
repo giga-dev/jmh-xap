@@ -2,9 +2,10 @@ import org.junit.Test;
 import utils.Assertions;
 import utils.BaselineStatistics;
 
-public class StatsTests {
+/** Tests that Assertions.assertResults returns as expected */
+public class AssertResultsUnitTest {
 
-    @Test //passed
+    @Test
     public void test1() {
         BaselineStatistics base
                 = new BaselineStatistics(1936645.252, 2001733.752, 2059101.215, 34104.486);
@@ -13,7 +14,7 @@ public class StatsTests {
         Assertions.assertResults(base, curr);
     }
 
-    @Test //failed
+    @Test
     public void test2() {
         BaselineStatistics base
                 = new BaselineStatistics(17023.266, 17553.047, 17923.291, 231.504);
@@ -22,7 +23,7 @@ public class StatsTests {
         Assertions.assertResults(base, curr);
     }
 
-    @Test //passed
+    @Test
     public void test3() {
         BaselineStatistics base
                 = new BaselineStatistics(43506.679, 46463.806,47466.763,964.645);
@@ -31,7 +32,7 @@ public class StatsTests {
         Assertions.assertResults(base, curr);
     }
 
-    @Test //passed
+    @Test
     public void test4() {
         BaselineStatistics base
                 = new BaselineStatistics(16131.971,17616.408,17886.991,393.313);
@@ -40,7 +41,7 @@ public class StatsTests {
         Assertions.assertResults(base, curr);
     }
 
-    @Test //failed
+    @Test
     public void test5() {
         BaselineStatistics base
                 = new BaselineStatistics(17023.266,17553.047,17923.291,231.504);
@@ -49,7 +50,7 @@ public class StatsTests {
         Assertions.assertResults(base, curr);
     }
 
-    @Test //passed
+    @Test
     public void test6() {
         BaselineStatistics base
                 = new BaselineStatistics(46998.906,48995.602,49876.066,625.967);

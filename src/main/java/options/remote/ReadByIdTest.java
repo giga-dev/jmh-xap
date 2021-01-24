@@ -9,6 +9,8 @@ import sample.ReadByIdBenchmark;
 import utils.Assertions;
 import utils.BaselineStatistics;
 
+import static utils.DefaultProperties.*;
+
 public class ReadByIdTest {
 
     @Test
@@ -16,9 +18,9 @@ public class ReadByIdTest {
         Options opt = new OptionsBuilder()
                 .include(ReadByIdBenchmark.class.getName())
                 .param("mode", "remote")
-                .forks(1)
-                .warmupIterations(5)
-                .measurementIterations(25)
+                .forks(FORKS_DEFAULT)
+                .warmupIterations(WARMUP_ITERATIONS_DEFAULT)
+                .measurementIterations(MEASUREMENT_ITERATIONS_DEFAULT)
                 .build();
 
         Assertions.assertResults(
@@ -32,9 +34,9 @@ public class ReadByIdTest {
                 .include(ReadByIdBenchmark.class.getName())
                 .param("mode", "remote")
                 .threads(4)
-                .forks(1)
-                .warmupIterations(5)
-                .measurementIterations(25)
+                .forks(FORKS_DEFAULT)
+                .warmupIterations(WARMUP_ITERATIONS_DEFAULT)
+                .measurementIterations(MEASUREMENT_ITERATIONS_DEFAULT)
                 .build();
 
         Assertions.assertResults(

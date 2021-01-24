@@ -9,6 +9,8 @@ import sample.TakeByIdBenchmark;
 import utils.Assertions;
 import utils.BaselineStatistics;
 
+import static utils.DefaultProperties.*;
+
 public class TakeByIdTest {
 
     @Test
@@ -16,9 +18,9 @@ public class TakeByIdTest {
         Options opt = new OptionsBuilder()
                 .include(TakeByIdBenchmark.class.getName())
                 .param("mode", "remote")
-                .forks(1)
-                .warmupIterations(5)
-                .measurementIterations(25)
+                .forks(FORKS_DEFAULT)
+                .warmupIterations(WARMUP_ITERATIONS_DEFAULT)
+                .measurementIterations(MEASUREMENT_ITERATIONS_DEFAULT)
                 .build();
 
         Assertions.assertResults(

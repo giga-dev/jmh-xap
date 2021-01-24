@@ -9,6 +9,8 @@ import sample.WriteByIdBenchmark;
 import utils.Assertions;
 import utils.BaselineStatistics;
 
+import static utils.DefaultProperties.*;
+
 public class WriteByIdTest {
 
     @Test
@@ -16,9 +18,9 @@ public class WriteByIdTest {
         Options opt = new OptionsBuilder()
                 .include(WriteByIdBenchmark.class.getName())
                 .param("mode", "remote")
-                .forks(1)
-                .warmupIterations(5)
-                .measurementIterations(25)
+                .forks(FORKS_DEFAULT)
+                .warmupIterations(WARMUP_ITERATIONS_DEFAULT)
+                .measurementIterations(MEASUREMENT_ITERATIONS_DEFAULT)
                 .build();
 
 
