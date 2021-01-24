@@ -18,10 +18,12 @@ public class Assertions {
         }
     }
 
-    /** assert results at a predefined confidence level of 99.9% */
+    /** assert results at a predefined Confidence Interval (CI) of 99.9% */
     public static void assertResults(BaselineStatistics baseStatistics, Statistics currStatistics) {
 
         final double MAX_DEVIATION = 0.05;
+        final double CONFIDENCE_INTERVAL = 0.999;
+
         System.out.println("Assert results:");
         System.out.println("Baseline statistics: \n" + baseStatistics +"\n");
         System.out.println("Current  statistics: \n" + new BaselineStatistics(currStatistics) +"\n");
@@ -29,8 +31,8 @@ public class Assertions {
         //make sure we are comparing on same iteration size - default assumes measurementIterations=25
         assertEquals("measurement iterations differ", baseStatistics.getN(), currStatistics.getN());
 
-        final double[] baseCI = baseStatistics.getConfidenceIntervalAt(0.999);
-        final double[] currCI = currStatistics.getConfidenceIntervalAt(0.999);
+        final double[] baseCI = baseStatistics.getConfidenceIntervalAt(CONFIDENCE_INTERVAL);
+        final double[] currCI = currStatistics.getConfidenceIntervalAt(CONFIDENCE_INTERVAL);
 
         boolean deviatedFromMean = isDeviatedFromScore(
                 baseStatistics.getMean(), currStatistics.getMean(), MAX_DEVIATION);
