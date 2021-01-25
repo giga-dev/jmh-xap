@@ -13,10 +13,12 @@ import utils.GigaSpaceFactory;
 
 import java.rmi.RemoteException;
 
+import static utils.DefaultProperties.*;
+
 @State(Scope.Benchmark)
 public class TakeByIdBenchmark {
 
-    @Param({"embedded", "remote"})
+    @Param({MODE_EMBEDDED, MODE_REMOTE})
     private static String mode;
 
     @Benchmark
@@ -28,7 +30,7 @@ public class TakeByIdBenchmark {
     @State(Scope.Benchmark)
     public static class SpaceState {
 
-        private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace(DefaultProperties.DEFAULT_SPACE_NAME, mode.equals("embedded"));
+        private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace(DefaultProperties.DEFAULT_SPACE_NAME, mode.equals(MODE_EMBEDDED));
 
         @Setup
         public void setup() {
@@ -42,7 +44,7 @@ public class TakeByIdBenchmark {
 
         @TearDown
         public void teardown() {
-            if (mode.equals("embedded")) {
+            if (mode.equals(MODE_EMBEDDED)) {
                 try {
                     gigaSpace.getSpace().getDirectProxy().shutdown();
                 } catch (RemoteException e) {
@@ -56,7 +58,7 @@ public class TakeByIdBenchmark {
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()
                 .include(TakeByIdBenchmark.class.getName())
-                .param("mode", "embedded")
+                .param(PARAM_MODE, MODE_EMBEDDED)
                 .forks(1)
                 .build();
 

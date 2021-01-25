@@ -13,10 +13,12 @@ import utils.GigaSpaceFactory;
 
 import java.util.Random;
 
+import static utils.DefaultProperties.*;
+
 @State(Scope.Benchmark)
 public class UpdateAndReadByIdBenchmark {
 
-    @Param({"embedded", "remote"})
+    @Param({MODE_EMBEDDED, MODE_REMOTE})
     private static String mode;
 
     @Benchmark
@@ -38,7 +40,7 @@ public class UpdateAndReadByIdBenchmark {
 
         private final Random random = new Random();
         private int threadsCount;
-        private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace(DefaultProperties.DEFAULT_SPACE_NAME, mode.equals("embedded"));
+        private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace(DefaultProperties.DEFAULT_SPACE_NAME, mode.equals(MODE_EMBEDDED));
 
         @Setup
         public void setup(BenchmarkParams benchmarkParams) {
@@ -59,7 +61,7 @@ public class UpdateAndReadByIdBenchmark {
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()
                 .include(UpdateAndReadByIdBenchmark.class.getName())
-                .param("mode", "embedded")
+                .param(PARAM_MODE, MODE_EMBEDDED)
                 .forks(1)
                 .build();
 

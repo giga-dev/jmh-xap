@@ -11,10 +11,13 @@ import utils.GigaSpaceFactory;
 import java.rmi.RemoteException;
 import java.util.Random;
 
+import static utils.DefaultProperties.MODE_EMBEDDED;
+import static utils.DefaultProperties.MODE_REMOTE;
+
 @State(Scope.Benchmark)
 public class ChangeUsingSetAndIdTemplateBenchmark {
 
-    @Param({"embedded", "remote"})
+    @Param({MODE_EMBEDDED, MODE_REMOTE})
     private static String mode;
 
     @Benchmark
@@ -27,7 +30,7 @@ public class ChangeUsingSetAndIdTemplateBenchmark {
 
         private final Random random = new Random();
         private int threadsCount;
-        private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace(DefaultProperties.DEFAULT_SPACE_NAME, mode.equals("embedded"));
+        private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace(DefaultProperties.DEFAULT_SPACE_NAME, mode.equals(MODE_EMBEDDED));
 
         @Setup
         public void setup(BenchmarkParams benchmarkParams) {
@@ -40,7 +43,7 @@ public class ChangeUsingSetAndIdTemplateBenchmark {
 
         @TearDown
         public void teardown() {
-            if (mode.equals("embedded")) {
+            if (mode.equals(MODE_EMBEDDED)) {
                 try {
                     gigaSpace.getSpace().getDirectProxy().shutdown();
                 } catch (RemoteException e) {

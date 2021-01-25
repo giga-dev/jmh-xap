@@ -17,7 +17,7 @@ public class TakeByIdUsingSQLIdQueryTest {
     public void embedded() throws RunnerException {
         Options opt = new OptionsBuilder()
                 .include(TakeByIdUsingSQLIdQueryBenchmark.class.getName())
-                .param("mode", "embedded")
+                .param(PARAM_MODE, MODE_EMBEDDED)
                 .jvmArgs(JVM_ARGS_EMBEDDED_DEFAULT)
                 .forks(FORKS_DEFAULT)
                 .warmupIterations(WARMUP_ITERATIONS_DEFAULT)

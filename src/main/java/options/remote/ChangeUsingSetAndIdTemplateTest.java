@@ -10,7 +10,6 @@ import utils.Assertions;
 import utils.BaselineStatistics;
 
 import static utils.DefaultProperties.*;
-import static utils.DefaultProperties.MEASUREMENT_ITERATIONS_DEFAULT;
 
 public class ChangeUsingSetAndIdTemplateTest {
 
@@ -18,7 +17,7 @@ public class ChangeUsingSetAndIdTemplateTest {
     public void remote() throws RunnerException {
         Options opt = new OptionsBuilder()
                 .include(ChangeUsingSetAndIdTemplateBenchmark.class.getName())
-                .param("mode", "remote")
+                .param(PARAM_MODE, MODE_REMOTE)
                 .forks(FORKS_DEFAULT)
                 .warmupIterations(WARMUP_ITERATIONS_DEFAULT)
                 .measurementIterations(MEASUREMENT_ITERATIONS_DEFAULT)
@@ -33,7 +32,7 @@ public class ChangeUsingSetAndIdTemplateTest {
     public void remote_4_threads() throws RunnerException {
         Options opt = new OptionsBuilder()
                 .include(ChangeUsingSetAndIdTemplateBenchmark.class.getName())
-                .param("mode", "remote")
+                .param(PARAM_MODE, MODE_REMOTE)
                 .threads(4)
                 .forks(FORKS_DEFAULT)
                 .warmupIterations(WARMUP_ITERATIONS_DEFAULT)
@@ -49,7 +48,7 @@ public class ChangeUsingSetAndIdTemplateTest {
     public void remote_8_threads() throws RunnerException {
         Options opt = new OptionsBuilder()
                 .include(ChangeUsingSetAndIdTemplateBenchmark.class.getName())
-                .param("mode", "remote")
+                .param(PARAM_MODE, MODE_REMOTE)
                 .threads(8)
                 .forks(FORKS_DEFAULT)
                 .warmupIterations(WARMUP_ITERATIONS_DEFAULT)

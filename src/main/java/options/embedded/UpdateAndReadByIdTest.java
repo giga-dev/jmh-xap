@@ -17,7 +17,7 @@ public class UpdateAndReadByIdTest {
     public void embedded_1put_3get_threads() throws RunnerException {
         Options opt = new OptionsBuilder()
                 .include(UpdateAndReadByIdBenchmark.class.getName())
-                .param("mode", "embedded")
+                .param(PARAM_MODE, MODE_EMBEDDED)
                 .jvmArgs(JVM_ARGS_EMBEDDED_DEFAULT)
                 .threads(4)
                 .forks(FORKS_DEFAULT)

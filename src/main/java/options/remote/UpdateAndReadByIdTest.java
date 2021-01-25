@@ -17,7 +17,7 @@ public class UpdateAndReadByIdTest {
     public void remote_1put_3get_threads() throws RunnerException {
         Options opt = new OptionsBuilder()
                 .include(UpdateAndReadByIdBenchmark.class.getName())
-                .param("mode", "remote")
+                .param(PARAM_MODE, MODE_REMOTE)
                 .threads(4)
                 .forks(FORKS_DEFAULT)
                 .warmupIterations(WARMUP_ITERATIONS_DEFAULT)

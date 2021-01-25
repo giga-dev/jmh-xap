@@ -51,7 +51,7 @@ public class Assertions {
         if (deviatedFromMean || deviatedFromCI_0 || deviatedFromCI_1) {
             System.out.println("[-] Mean difference is not statistically significant");
         } else {
-            System.out.println("[√] Results are within the allowed deviation of " + (MAX_DEVIATION * 100) + "%");
+            System.out.println("[+] Results are within the allowed deviation of " + (MAX_DEVIATION * 100) + "%");
         }
     }
 
