@@ -1,36 +1,26 @@
 package sample;
 
+import com.gigaspaces.client.ChangeSet;
+import com.gigaspaces.query.IdQuery;
 import model.Message;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.BenchmarkParams;
-import org.openjdk.jmh.runner.Runner;
-import org.openjdk.jmh.runner.RunnerException;
-import org.openjdk.jmh.runner.options.Options;
-import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openspaces.core.GigaSpace;
 import utils.DefaultProperties;
 import utils.GigaSpaceFactory;
 
+import java.rmi.RemoteException;
 import java.util.Random;
 
 @State(Scope.Benchmark)
-public class UpdateAndReadByIdBenchmark {
+public class ChangeUsingSetAndSQLIdQueryBenchmark {
 
     @Param({"embedded", "remote"})
     private static String mode;
 
     @Benchmark
-    @Group("PutGet")
-    @GroupThreads(1)
-    public Object testPut(SpaceState spaceState) {
-        return spaceState.gigaSpace.write(new Message().setId(spaceState.getKey()).setPayload("zoo"));
-    }
-
-    @Benchmark
-    @Group("PutGet")
-    @GroupThreads(3)
-    public Object testGet(SpaceState spaceState) {
-        return spaceState.gigaSpace.readById(Message.class, spaceState.getKey());
+    public Object testChangeUsingSetAndSQLIdQuery(SpaceState spaceState) {
+        return spaceState.gigaSpace.change(new IdQuery<Message>(Message.class, spaceState.getKey()), new ChangeSet().set("payload", "bar"));
     }
 
     @State(Scope.Benchmark)
@@ -44,25 +34,25 @@ public class UpdateAndReadByIdBenchmark {
         public void setup(BenchmarkParams benchmarkParams) {
             gigaSpace.clear(null);
             threadsCount = benchmarkParams.getThreads();
-            for(int i = 0 ; i < threadsCount ; i++){
+            for(int i = 0 ; i < threadsCount ; i++) {
                 gigaSpace.write(new Message().setId(String.valueOf(i)).setPayload("foo"));
+            }
+        }
 
+        @TearDown
+        public void teardown() {
+            if (mode.equals("embedded")) {
+                try {
+                    gigaSpace.getSpace().getDirectProxy().shutdown();
+                } catch (RemoteException e) {
+                    System.err.println("failed to shutdown Space" + e);
+                }
             }
         }
 
         public String getKey() {
             return String.valueOf(random.nextInt(threadsCount));
         }
-    }
 
-
-    public static void main(String[] args) throws RunnerException {
-        Options opt = new OptionsBuilder()
-                .include(UpdateAndReadByIdBenchmark.class.getName())
-                .param("mode", "embedded")
-                .forks(1)
-                .build();
-
-        new Runner(opt).run();
     }
 }

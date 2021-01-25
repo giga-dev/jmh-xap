@@ -28,4 +28,38 @@ public class WriteByIdTest {
                 new BaselineStatistics(16131.971, 17616.408, 17886.991, 393.313),
                 new Runner(opt).run());
     }
+
+    @Test
+    public void remote_4_threads() throws RunnerException {
+        Options opt = new OptionsBuilder()
+                .include(WriteByIdBenchmark.class.getName())
+                .param("mode", "remote")
+                .threads(4)
+                .forks(FORKS_DEFAULT)
+                .warmupIterations(WARMUP_ITERATIONS_DEFAULT)
+                .measurementIterations(MEASUREMENT_ITERATIONS_DEFAULT)
+                .build();
+
+
+        Assertions.assertResults(
+                new BaselineStatistics(16131.971, 17616.408, 17886.991, 393.313),
+                new Runner(opt).run());
+    }
+
+    @Test
+    public void remote_8_threads() throws RunnerException {
+        Options opt = new OptionsBuilder()
+                .include(WriteByIdBenchmark.class.getName())
+                .param("mode", "remote")
+                .threads(8)
+                .forks(FORKS_DEFAULT)
+                .warmupIterations(WARMUP_ITERATIONS_DEFAULT)
+                .measurementIterations(MEASUREMENT_ITERATIONS_DEFAULT)
+                .build();
+
+
+        Assertions.assertResults(
+                new BaselineStatistics(16131.971, 17616.408, 17886.991, 393.313),
+                new Runner(opt).run());
+    }
 }

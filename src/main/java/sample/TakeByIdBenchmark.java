@@ -2,15 +2,16 @@ package sample;
 
 import model.Message;
 import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.infra.ThreadParams;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openspaces.core.GigaSpace;
+import utils.DefaultProperties;
 import utils.GigaSpaceFactory;
 
 import java.rmi.RemoteException;
-import java.util.Random;
 
 @State(Scope.Benchmark)
 public class TakeByIdBenchmark {
@@ -19,16 +20,15 @@ public class TakeByIdBenchmark {
     private static String mode;
 
     @Benchmark
-    public Object testTakeById(SpaceState spaceState) {
-        return spaceState.gigaSpace.takeById(Message.class, "1");
+    public Object testTakeById(SpaceState spaceState, ThreadParams threadParams) {
+        return spaceState.gigaSpace.takeById(Message.class, String.valueOf(threadParams.getThreadIndex()));
     }
 
 
     @State(Scope.Benchmark)
     public static class SpaceState {
 
-        private final Random random = new Random();
-        private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace("rgtest", mode.equals("embedded"));
+        private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace(DefaultProperties.DEFAULT_SPACE_NAME, mode.equals("embedded"));
 
         @Setup
         public void setup() {
@@ -36,8 +36,8 @@ public class TakeByIdBenchmark {
         }
 
         @Setup(Level.Invocation)
-        public void doWrite() {
-            gigaSpace.write(new Message().setId("1").setPayload("foo"));
+        public void doWrite(ThreadParams threadParams) {
+            gigaSpace.write(new Message().setId(String.valueOf(threadParams.getThreadIndex())).setPayload("foo"));
         }
 
         @TearDown

@@ -2,11 +2,13 @@ package sample;
 
 import model.Message;
 import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.infra.BenchmarkParams;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openspaces.core.GigaSpace;
+import utils.DefaultProperties;
 import utils.GigaSpaceFactory;
 
 import java.rmi.RemoteException;
@@ -27,13 +29,16 @@ public class ReadByIdBenchmark {
     public static class SpaceState {
 
         private final Random random = new Random();
-        private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace("rgtest", mode.equals("embedded"));
+        private int threadsCount;
+        private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace(DefaultProperties.DEFAULT_SPACE_NAME, mode.equals("embedded"));
 
         @Setup
-        public void setup() {
+        public void setup(BenchmarkParams benchmarkParams) {
             gigaSpace.clear(null);
-            gigaSpace.write(new Message().setId("1").setPayload("foo"));
-            gigaSpace.write(new Message().setId("2").setPayload("bar"));
+            threadsCount = benchmarkParams.getThreads();
+            for(int i = 0 ; i < threadsCount ; i++) {
+                gigaSpace.write(new Message().setId(String.valueOf(i)).setPayload("foo"));
+            }
         }
 
         @TearDown
@@ -48,7 +53,7 @@ public class ReadByIdBenchmark {
         }
 
         public String getKey() {
-            return String.valueOf(Math.abs(random.nextInt(2)+1));
+            return String.valueOf(random.nextInt(threadsCount));
         }
     }
 
