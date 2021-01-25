@@ -5,19 +5,18 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
-import sample.ReadByIdUsingSQLIdQueryBenchmark;
+import sample.TakeByIdQueryBenchmark;
 import utils.Assertions;
 import utils.BaselineStatistics;
 
 import static utils.DefaultProperties.*;
 
-public class ReadByIdUsingSQLIdQueryTest {
+public class TakeByIdQueryTest {
 
     @Test
     public void embedded() throws RunnerException {
-
         Options opt = new OptionsBuilder()
-                .include(ReadByIdUsingSQLIdQueryBenchmark.class.getName())
+                .include(TakeByIdQueryBenchmark.class.getName())
                 .param(PARAM_MODE, MODE_EMBEDDED)
                 .jvmArgs(JVM_ARGS_EMBEDDED_DEFAULT)
                 .forks(FORKS_DEFAULT)
@@ -26,7 +25,7 @@ public class ReadByIdUsingSQLIdQueryTest {
                 .build();
 
         Assertions.assertResults(
-                new BaselineStatistics(1512538.392, 1654055.980, 1773511.848, 70484.104),
+                new BaselineStatistics(1772089.939, 1850562.256, 1944153.320, 72936.254),
                 new Runner(opt).run());
     }
 }

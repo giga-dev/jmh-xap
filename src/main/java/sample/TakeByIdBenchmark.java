@@ -8,7 +8,6 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openspaces.core.GigaSpace;
-import utils.DefaultProperties;
 import utils.GigaSpaceFactory;
 
 import java.rmi.RemoteException;
@@ -30,7 +29,7 @@ public class TakeByIdBenchmark {
     @State(Scope.Benchmark)
     public static class SpaceState {
 
-        private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace(DefaultProperties.DEFAULT_SPACE_NAME, mode.equals(MODE_EMBEDDED));
+        private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace(DEFAULT_SPACE_NAME, mode.equals(MODE_EMBEDDED));
 
         @Setup
         public void setup() {

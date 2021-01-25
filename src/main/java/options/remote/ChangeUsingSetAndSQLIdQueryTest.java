@@ -5,7 +5,7 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
-import sample.ChangeUsingSetAndSQLIdQueryBenchmark;
+import sample.ChangeByIdQuerySetBenchmark;
 import utils.Assertions;
 import utils.BaselineStatistics;
 
@@ -16,7 +16,7 @@ public class ChangeUsingSetAndSQLIdQueryTest {
     @Test
     public void remote() throws RunnerException {
         Options opt = new OptionsBuilder()
-                .include(ChangeUsingSetAndSQLIdQueryBenchmark.class.getName())
+                .include(ChangeByIdQuerySetBenchmark.class.getName())
                 .param(PARAM_MODE, MODE_REMOTE)
                 .forks(FORKS_DEFAULT)
                 .warmupIterations(WARMUP_ITERATIONS_DEFAULT)
@@ -31,7 +31,7 @@ public class ChangeUsingSetAndSQLIdQueryTest {
     @Test
     public void remote_4_threads() throws RunnerException {
         Options opt = new OptionsBuilder()
-                .include(ChangeUsingSetAndSQLIdQueryBenchmark.class.getName())
+                .include(ChangeByIdQuerySetBenchmark.class.getName())
                 .param(PARAM_MODE, MODE_REMOTE)
                 .threads(4)
                 .forks(FORKS_DEFAULT)
@@ -47,7 +47,7 @@ public class ChangeUsingSetAndSQLIdQueryTest {
     @Test
     public void remote_8_threads() throws RunnerException {
         Options opt = new OptionsBuilder()
-                .include(ChangeUsingSetAndSQLIdQueryBenchmark.class.getName())
+                .include(ChangeByIdQuerySetBenchmark.class.getName())
                 .param(PARAM_MODE, MODE_REMOTE)
                 .threads(8)
                 .forks(FORKS_DEFAULT)

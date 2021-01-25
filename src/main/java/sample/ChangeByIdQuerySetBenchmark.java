@@ -6,23 +6,21 @@ import model.Message;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.BenchmarkParams;
 import org.openspaces.core.GigaSpace;
-import utils.DefaultProperties;
 import utils.GigaSpaceFactory;
 
 import java.rmi.RemoteException;
 import java.util.Random;
 
-import static utils.DefaultProperties.MODE_EMBEDDED;
-import static utils.DefaultProperties.MODE_REMOTE;
+import static utils.DefaultProperties.*;
 
 @State(Scope.Benchmark)
-public class ChangeUsingSetAndSQLIdQueryBenchmark {
+public class ChangeByIdQuerySetBenchmark {
 
     @Param({MODE_EMBEDDED, MODE_REMOTE})
     private static String mode;
 
     @Benchmark
-    public Object testChangeUsingSetAndSQLIdQuery(SpaceState spaceState) {
+    public Object testChangeByIdQuerySet(SpaceState spaceState) {
         return spaceState.gigaSpace.change(new IdQuery<Message>(Message.class, spaceState.getKey()), new ChangeSet().set("payload", "bar"));
     }
 
@@ -31,7 +29,7 @@ public class ChangeUsingSetAndSQLIdQueryBenchmark {
 
         private final Random random = new Random();
         private int threadsCount;
-        private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace(DefaultProperties.DEFAULT_SPACE_NAME, mode.equals(MODE_EMBEDDED));
+        private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace(DEFAULT_SPACE_NAME, mode.equals(MODE_EMBEDDED));
 
         @Setup
         public void setup(BenchmarkParams benchmarkParams) {

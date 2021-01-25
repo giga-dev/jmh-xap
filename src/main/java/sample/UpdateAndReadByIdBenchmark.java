@@ -8,7 +8,6 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openspaces.core.GigaSpace;
-import utils.DefaultProperties;
 import utils.GigaSpaceFactory;
 
 import java.util.Random;
@@ -40,7 +39,7 @@ public class UpdateAndReadByIdBenchmark {
 
         private final Random random = new Random();
         private int threadsCount;
-        private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace(DefaultProperties.DEFAULT_SPACE_NAME, mode.equals(MODE_EMBEDDED));
+        private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace(DEFAULT_SPACE_NAME, mode.equals(MODE_EMBEDDED));
 
         @Setup
         public void setup(BenchmarkParams benchmarkParams) {
