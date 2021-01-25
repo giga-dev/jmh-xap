@@ -13,6 +13,7 @@ import utils.GigaSpaceFactory;
 
 import java.rmi.RemoteException;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static utils.DefaultProperties.*;
 
@@ -30,7 +31,6 @@ public class ReadByIdQueryBenchmark {
     @State(Scope.Benchmark)
     public static class SpaceState {
 
-        private final Random random = new Random();
         private int threadsCount;
         private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace(DEFAULT_SPACE_NAME, mode.equals(MODE_EMBEDDED));
 
@@ -55,7 +55,7 @@ public class ReadByIdQueryBenchmark {
         }
 
         public String getKey() {
-            return String.valueOf(random.nextInt(threadsCount));
+            return String.valueOf(ThreadLocalRandom.current().nextInt(threadsCount));
         }
     }
 
