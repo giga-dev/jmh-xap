@@ -18,6 +18,7 @@ public class TakeByIdTest {
         Options opt = new OptionsBuilder()
                 .include(TakeByIdBenchmark.class.getName())
                 .param("mode", "embedded")
+                .jvmArgs(JVM_ARGS_EMBEDDED_DEFAULT)
                 .forks(FORKS_DEFAULT)
                 .warmupIterations(WARMUP_ITERATIONS_DEFAULT)
                 .measurementIterations(MEASUREMENT_ITERATIONS_DEFAULT)

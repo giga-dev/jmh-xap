@@ -18,6 +18,7 @@ public class UpdateAndReadByIdTest {
         Options opt = new OptionsBuilder()
                 .include(UpdateAndReadByIdBenchmark.class.getName())
                 .param("mode", "embedded")
+                .jvmArgs(JVM_ARGS_EMBEDDED_DEFAULT)
                 .threads(4)
                 .forks(FORKS_DEFAULT)
                 .warmupIterations(WARMUP_ITERATIONS_DEFAULT)
