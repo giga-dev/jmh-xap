@@ -22,7 +22,7 @@ public class TakeByTemplateMatchingOnIndexBenchmark {
     private static String mode;
 
     @Benchmark
-    public Object TakeByTemplateMatchingOnIndex(SpaceState spaceState, ThreadParams threadParams) {
+    public Object testTakeByTemplateMatchingOnIndex(SpaceState spaceState, ThreadParams threadParams) {
         return spaceState.gigaSpace.take(new Book()
                 .setAuthor(String.valueOf(threadParams.getThreadIndex())));
     }
