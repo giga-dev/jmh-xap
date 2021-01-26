@@ -5,18 +5,19 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
-import sample.ChangeUsingSetAndIdTemplateBenchmark;
+import sample.ReadByTemplateMatchingOnIndexBenchmark;
 import utils.Assertions;
 import utils.BaselineStatistics;
 
 import static utils.DefaultProperties.*;
+import static utils.DefaultProperties.MEASUREMENT_ITERATIONS_DEFAULT;
 
-public class ChangeUsingSetAndIdTemplateTest {
+public class ReadByTemplateMatchingOnIndexTest {
 
     @Test
     public void embedded() throws RunnerException {
         Options opt = new OptionsBuilder()
-                .include(ChangeUsingSetAndIdTemplateBenchmark.class.getName())
+                .include(ReadByTemplateMatchingOnIndexBenchmark.class.getName())
                 .param(PARAM_MODE, MODE_EMBEDDED)
                 .jvmArgs(JVM_ARGS_EMBEDDED_DEFAULT)
                 .forks(FORKS_DEFAULT)
@@ -25,7 +26,7 @@ public class ChangeUsingSetAndIdTemplateTest {
                 .build();
 
         Assertions.assertResults(
-                new BaselineStatistics(830148.693, 923591.223, 997224.350, 48198.572),
+                new BaselineStatistics(1097023.192, 1108660.544, 1117762.621, 10599.608),
                 new Runner(opt).run());
     }
 }

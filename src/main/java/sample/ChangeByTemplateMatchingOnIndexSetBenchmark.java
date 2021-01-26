@@ -1,32 +1,36 @@
 package sample;
 
 import com.gigaspaces.client.ChangeSet;
-import model.Message;
+import model.Book;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.BenchmarkParams;
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.RunnerException;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openspaces.core.GigaSpace;
 import utils.GigaSpaceFactory;
 
 import java.rmi.RemoteException;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static utils.DefaultProperties.*;
 
 @State(Scope.Benchmark)
-public class ChangeUsingSetAndIdTemplateBenchmark {
+public class ChangeByTemplateMatchingOnIndexSetBenchmark {
 
     @Param({MODE_EMBEDDED, MODE_REMOTE})
     private static String mode;
 
     @Benchmark
-    public Object testChangeUsingSetAndIdTemplate(SpaceState spaceState) {
-        return spaceState.gigaSpace.change(new Message().setId(spaceState.getKey()), new ChangeSet().set("payload", "bar"));
+    public Object testChangeByTemplateMatchingOnIndexSet(SpaceState spaceState) {
+        return spaceState.gigaSpace.change(new Book().setAuthor(spaceState.getAuthor()),
+                new ChangeSet().set("payload", "bar"));
     }
 
     @State(Scope.Benchmark)
     public static class SpaceState {
 
-        private final Random random = new Random();
         private int threadsCount;
         private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace(DEFAULT_SPACE_NAME, mode.equals(MODE_EMBEDDED));
 
@@ -35,7 +39,10 @@ public class ChangeUsingSetAndIdTemplateBenchmark {
             gigaSpace.clear(null);
             threadsCount = benchmarkParams.getThreads();
             for(int i = 0 ; i < threadsCount ; i++) {
-                gigaSpace.write(new Message().setId(String.valueOf(i)).setPayload("foo"));
+                gigaSpace.write(new Book()
+                        .setId(String.valueOf(i))
+                        .setAuthor(String.valueOf(i))
+                        .setPayload("foo"));
             }
         }
 
@@ -50,8 +57,19 @@ public class ChangeUsingSetAndIdTemplateBenchmark {
             }
         }
 
-        public String getKey() {
-            return String.valueOf(random.nextInt(threadsCount));
+        public String getAuthor() {
+            return String.valueOf(ThreadLocalRandom.current().nextInt(threadsCount));
+        }
+
+        public static void main(String[] args) throws RunnerException {
+            Options opt = new OptionsBuilder()
+                    .include(ChangeByTemplateMatchingOnIndexSetBenchmark.class.getName())
+                    .param(PARAM_MODE, MODE_REMOTE)
+                    .threads(1)
+                    .forks(1)
+                    .build();
+
+            new Runner(opt).run();
         }
 
     }

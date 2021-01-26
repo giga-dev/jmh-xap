@@ -5,18 +5,18 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
-import sample.ChangeUsingSetAndIdTemplateBenchmark;
+import sample.ReadByIdQueryBenchmark;
 import utils.Assertions;
 import utils.BaselineStatistics;
 
 import static utils.DefaultProperties.*;
 
-public class ChangeUsingSetAndIdTemplateTest {
+public class ReadByIdQueryTest {
 
     @Test
     public void remote() throws RunnerException {
         Options opt = new OptionsBuilder()
-                .include(ChangeUsingSetAndIdTemplateBenchmark.class.getName())
+                .include(ReadByIdQueryBenchmark.class.getName())
                 .param(PARAM_MODE, MODE_REMOTE)
                 .forks(FORKS_DEFAULT)
                 .warmupIterations(WARMUP_ITERATIONS_DEFAULT)
@@ -24,14 +24,14 @@ public class ChangeUsingSetAndIdTemplateTest {
                 .build();
 
         Assertions.assertResults(
-                new BaselineStatistics(13496.654, 15728.413, 16229.494, 597.123),
+                new BaselineStatistics(16218.836, 16542.688, 16671.302, 189.720),
                 new Runner(opt).run());
     }
 
     @Test
     public void remote_4_threads() throws RunnerException {
         Options opt = new OptionsBuilder()
-                .include(ChangeUsingSetAndIdTemplateBenchmark.class.getName())
+                .include(ReadByIdQueryBenchmark.class.getName())
                 .param(PARAM_MODE, MODE_REMOTE)
                 .threads(4)
                 .forks(FORKS_DEFAULT)
@@ -40,14 +40,14 @@ public class ChangeUsingSetAndIdTemplateTest {
                 .build();
 
         Assertions.assertResults(
-                new BaselineStatistics(24754.901, 26153.910, 27339.699, 771.890),
+                new BaselineStatistics(33617.748, 34564.107, 34858.966, 530.799),
                 new Runner(opt).run());
     }
 
     @Test
     public void remote_8_threads() throws RunnerException {
         Options opt = new OptionsBuilder()
-                .include(ChangeUsingSetAndIdTemplateBenchmark.class.getName())
+                .include(ReadByIdQueryBenchmark.class.getName())
                 .param(PARAM_MODE, MODE_REMOTE)
                 .threads(8)
                 .forks(FORKS_DEFAULT)
@@ -56,7 +56,7 @@ public class ChangeUsingSetAndIdTemplateTest {
                 .build();
 
         Assertions.assertResults(
-                new BaselineStatistics(31492.550, 32594.576, 33085.971, 401.356),
+                new BaselineStatistics(46998.906, 48995.602, 49876.066, 625.967),
                 new Runner(opt).run());
     }
 }
