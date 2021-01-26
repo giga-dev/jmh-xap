@@ -1,14 +1,6 @@
 package sample;
 
-import com.gigaspaces.events.DataEventSession;
-import com.gigaspaces.events.DataEventSessionFactory;
-import com.gigaspaces.events.EventSessionConfig;
-import com.gigaspaces.events.NotifyActionType;
-import com.j_spaces.core.client.EntryArrivedRemoteEvent;
 import model.Message;
-import net.jini.core.event.EventRegistration;
-import net.jini.core.event.RemoteEvent;
-import net.jini.core.event.RemoteEventListener;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.ThreadParams;
 import org.openjdk.jmh.runner.Runner;
@@ -16,6 +8,9 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openspaces.core.GigaSpace;
+import org.openspaces.events.adapter.SpaceDataEvent;
+import org.openspaces.events.notify.SimpleNotifyContainerConfigurer;
+import org.openspaces.events.notify.SimpleNotifyEventListenerContainer;
 import utils.GigaSpaceFactory;
 
 import java.rmi.RemoteException;
@@ -80,59 +75,44 @@ public class NotifyWriteOrUpdateBenchmark {
     }
 
     @State(Scope.Thread)
-    public static class ThreadState implements RemoteEventListener {
+    public static class ThreadState {
 
         private int threadIndex;
-        private DataEventSession dataEventSession;
-        private EventRegistration eventRegistration;
         //two parties trip the barrier - notify thread and write thread
         private final CyclicBarrier cyclicBarrier = new CyclicBarrier(2);
+        private SimpleNotifyEventListenerContainer eventListener;
 
         @Setup
         public void setup(SpaceState spaceState, ThreadParams threadParams) throws RunnerException {
             this.threadIndex = threadParams.getThreadIndex();
-            registerEventListener(spaceState);
+            this.registerEventListener(spaceState);
         }
 
         @TearDown
         public void teardown() {
-            unRegisterEventListener();
+            this.unRegisterEventListener();
         }
 
         private void registerEventListener(SpaceState spaceState) throws RunnerException {
-            final EventSessionConfig config = new EventSessionConfig();
-            dataEventSession = DataEventSessionFactory.create(spaceState.gigaSpace.getSpace(), config);
-            try {
-                eventRegistration = dataEventSession.addListener(
-                        new Message().setId(String.valueOf(threadIndex)),
-                        this, NotifyActionType.NOTIFY_WRITE_OR_UPDATE);
-            } catch (RemoteException e) {
-                throw new RunnerException("Failed to register event listener", e);
-            }
+            eventListener  = new SimpleNotifyContainerConfigurer(spaceState.gigaSpace)
+                    .notifyWrite(true)
+                    .notifyUpdate(true)
+                    .template(new Message().setId(String.valueOf(threadIndex)))
+                    .eventListenerAnnotation(new Object(){
+                        @SpaceDataEvent
+                        public Message notify(Message message) throws BrokenBarrierException, InterruptedException {
+                            cyclicBarrier.await();
+                            return null;
+                        }
+                    })
+                    .notifyContainer();
+
+            eventListener.start();
         }
 
         private void unRegisterEventListener() {
-            if (dataEventSession != null && eventRegistration != null) {
-                try {
-                    dataEventSession.removeListener(eventRegistration);
-                } catch (Exception e) {
-                    System.out.println("failed to remove listener, exception ignored " + e);
-                }
-            }
-        }
-
-        public void notify(RemoteEvent remoteEvent) throws RemoteException {
-            EntryArrivedRemoteEvent event = ((EntryArrivedRemoteEvent) remoteEvent);
-            try {
-                Message msg = ((Message) event.getObject());
-                if (msg != null) {
-                    cyclicBarrier.await();
-                } else {
-                    throw new IllegalStateException("remoteEvent.getObject is null");
-                }
-            } catch (Exception e) {
-                System.err.println("Caught exception waiting on barrier: " + e);
-                throw new RemoteException("Caught exception waiting on barrier", e);
+            if (eventListener != null) {
+                eventListener.destroy();
             }
         }
     }
@@ -141,6 +121,7 @@ public class NotifyWriteOrUpdateBenchmark {
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()
                 .include(NotifyWriteOrUpdateBenchmark.class.getName())
+                .param(PARAM_MODE, MODE_EMBEDDED)
                 .forks(1)
                 .build();
 

@@ -48,6 +48,11 @@
 			<artifactId>xap-openspaces</artifactId>
 			<version>${gs.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.gigaspaces</groupId>
+			<artifactId>xap-datagrid</artifactId>
+			<version>${gs.version}</version>
+		</dependency>
 	</dependencies>
 
 	<build>
