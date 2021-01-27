@@ -43,20 +43,4 @@ public class ChangeByIdQuerySetTest {
                 new BaselineStatistics(24754.901, 26153.910, 27339.699, 771.890),
                 new Runner(opt).run());
     }
-
-    @Test
-    public void remote_8_threads() throws RunnerException {
-        Options opt = new OptionsBuilder()
-                .include(ChangeByIdQuerySetBenchmark.class.getName())
-                .param(PARAM_MODE, MODE_REMOTE)
-                .threads(8)
-                .forks(FORKS_DEFAULT)
-                .warmupIterations(WARMUP_ITERATIONS_DEFAULT)
-                .measurementIterations(MEASUREMENT_ITERATIONS_DEFAULT)
-                .build();
-
-        Assertions.assertResults(
-                new BaselineStatistics(31162.713, 31930.235, 32338.223, 337.898),
-                new Runner(opt).run());
-    }
 }

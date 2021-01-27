@@ -43,20 +43,4 @@ public class ReadByTemplateMatchingOnIndexTest {
                 new BaselineStatistics(20859.748, 20939.161, 21076.795, 84.258),
                 new Runner(opt).run());
     }
-
-    @Test
-    public void remote_8_threads() throws RunnerException {
-        Options opt = new OptionsBuilder()
-                .include(ReadByTemplateMatchingOnIndexBenchmark.class.getName())
-                .param(PARAM_MODE, MODE_REMOTE)
-                .threads(8)
-                .forks(FORKS_DEFAULT)
-                .warmupIterations(WARMUP_ITERATIONS_DEFAULT)
-                .measurementIterations(MEASUREMENT_ITERATIONS_DEFAULT)
-                .build();
-
-        Assertions.assertResults(
-                new BaselineStatistics(46998.906, 48995.602, 49876.066, 625.967),
-                new Runner(opt).run());
-    }
 }

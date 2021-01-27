@@ -43,20 +43,4 @@ public class ReadByIdQueryTest {
                 new BaselineStatistics(33617.748, 34564.107, 34858.966, 530.799),
                 new Runner(opt).run());
     }
-
-    @Test
-    public void remote_8_threads() throws RunnerException {
-        Options opt = new OptionsBuilder()
-                .include(ReadByIdQueryBenchmark.class.getName())
-                .param(PARAM_MODE, MODE_REMOTE)
-                .threads(8)
-                .forks(FORKS_DEFAULT)
-                .warmupIterations(WARMUP_ITERATIONS_DEFAULT)
-                .measurementIterations(MEASUREMENT_ITERATIONS_DEFAULT)
-                .build();
-
-        Assertions.assertResults(
-                new BaselineStatistics(46998.906, 48995.602, 49876.066, 625.967),
-                new Runner(opt).run());
-    }
 }

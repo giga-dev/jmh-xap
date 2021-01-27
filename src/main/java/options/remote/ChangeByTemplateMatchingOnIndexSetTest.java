@@ -43,20 +43,4 @@ public class ChangeByTemplateMatchingOnIndexSetTest {
                 new BaselineStatistics(19975.132, 20068.735, 20134.599, 61.833),
                 new Runner(opt).run());
     }
-
-    @Test
-    public void remote_8_threads() throws RunnerException {
-        Options opt = new OptionsBuilder()
-                .include(ChangeByTemplateMatchingOnIndexSetBenchmark.class.getName())
-                .param(PARAM_MODE, MODE_REMOTE)
-                .threads(8)
-                .forks(FORKS_DEFAULT)
-                .warmupIterations(WARMUP_ITERATIONS_DEFAULT)
-                .measurementIterations(MEASUREMENT_ITERATIONS_DEFAULT)
-                .build();
-
-        Assertions.assertResults(
-                new BaselineStatistics(31492.550, 32594.576, 33085.971, 401.356),
-                new Runner(opt).run());
-    }
 }

@@ -30,22 +30,6 @@ public class NotifyWriteOrUpdateTest {
     }
 
     @Test
-    public void remote_2_threads() throws RunnerException {
-        Options opt = new OptionsBuilder()
-                .include(NotifyWriteOrUpdateBenchmark.class.getName())
-                .param(PARAM_MODE, MODE_REMOTE)
-                .forks(FORKS_DEFAULT)
-                .threads(2)
-                .warmupIterations(WARMUP_ITERATIONS_DEFAULT)
-                .measurementIterations(MEASUREMENT_ITERATIONS_DEFAULT)
-                .build();
-
-        Assertions.assertResults(
-                new BaselineStatistics(16688.879, 17019.725, 17245.607, 155.878),
-                new Runner(opt).run());
-    }
-
-    @Test
     public void remote_4_threads() throws RunnerException {
         Options opt = new OptionsBuilder()
                 .include(NotifyWriteOrUpdateBenchmark.class.getName())
