@@ -10,7 +10,5 @@ public class DefaultProperties {
     public static final String PARAM_MODE="mode";
     public static final String MODE_EMBEDDED="embedded";
     public static final String MODE_REMOTE="remote";
-    public static final String PARAM_OBJECT_COUNT = "threadObjectCount";
-    public static final String DEFAULT_OBJECT_COUNT = "2";
-    public static final String SINGLE_OBJECT = "1";
+
 }

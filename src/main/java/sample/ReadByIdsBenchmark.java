@@ -37,7 +37,6 @@ public class ReadByIdsBenchmark {
             gigaSpace.clear(null);
         }
 
-
         @TearDown
         public void teardown() {
             if (mode.equals(MODE_EMBEDDED)) {
@@ -54,48 +53,19 @@ public class ReadByIdsBenchmark {
     public static class ThreadState {
 
         private String[] threadIds;
-        @Param({DEFAULT_OBJECT_COUNT})
-        private int threadObjectCount;
 
-        // Each Thread writes 'threadObjectCount' to space, and ReadByIds those objects.
+        // Each Thread writes 1 object to space, and ReadByIds this object.
         @Setup
         public void setup(SpaceState spaceState, ThreadParams threadParams) {
-            this.threadIds = new String[threadObjectCount];
-            Message[] messages = new Message[threadObjectCount];
-
-            //serial ids, for example 2 thread and 2 objects per thread:
-            //threadIndex 0 --> ids 0, 1
-            //threadIndex 1 --> ids 2 ,3
-            int from = threadParams.getThreadIndex() * threadObjectCount;
-            int to = from + threadObjectCount;
-            for (int i = from, index = 0 ; i < to ; i++, index++) {
-                String id = String.valueOf(i);
-                this.threadIds[index] = id;
-                messages[index] = new Message().setId(id).setPayload("foo");
-            }
-            //modulo ids, for example 2 thread and 2 objects per thread:
-            //threadIndex 0 --> ids 0, 2
-            //threadIndex 1 --> ids 1, 3
-//            int totalSpaceObjects = threadParams.getThreadCount() * threadObjectCount;
-//            for (int i = 0, index = 0 ; i < totalSpaceObjects ; i++) {
-//                if (i % threadParams.getThreadCount() == threadParams.getThreadIndex()) {
-//                    String id = String.valueOf(i);
-//                    this.threadIds[index] = id;
-//                    messages[index] = new Message().setId(id).setPayload("foo");
-//                    index++;
-//                }
-//
-//            }
-
-            spaceState.gigaSpace.writeMultiple(messages);
+            String id = String.valueOf(threadParams.getThreadIndex());
+            this.threadIds = new String[]{id};
+            spaceState.gigaSpace.write(new Message().setId(id).setPayload("foo"));
         }
 
         public String[] getThreadIds() {
             return threadIds;
         }
     }
-
-
 
         public static void main(String[] args) throws RunnerException {
 

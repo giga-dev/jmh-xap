@@ -18,7 +18,6 @@ public class ReadByIdsTest {
         Options opt = new OptionsBuilder()
                 .include(ReadByIdsBenchmark.class.getName())
                 .param(PARAM_MODE, MODE_EMBEDDED)
-                .param(PARAM_OBJECT_COUNT, DEFAULT_OBJECT_COUNT)
                 .jvmArgs(JVM_ARGS_EMBEDDED_DEFAULT)
                 .forks(FORKS_DEFAULT)
                 .warmupIterations(WARMUP_ITERATIONS_DEFAULT)

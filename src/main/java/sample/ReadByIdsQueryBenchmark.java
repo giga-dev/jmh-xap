@@ -39,7 +39,6 @@ public class ReadByIdsQueryBenchmark {
             gigaSpace.clear(null);
         }
 
-
         @TearDown
         public void teardown() {
             if (mode.equals(MODE_EMBEDDED)) {
@@ -56,31 +55,19 @@ public class ReadByIdsQueryBenchmark {
     public static class ThreadState {
 
         private String[] threadIds;
-        @Param({DEFAULT_OBJECT_COUNT})
-        private int threadObjectCount;
 
-        // Each Thread writes 'threadObjectCount' to space, and ReadByIds those objects.
+        // Each Thread writes 1 object to space, and ReadByIds this object.
         @Setup
         public void setup(SpaceState spaceState, ThreadParams threadParams) {
-            this.threadIds = new String[threadObjectCount];
-            Message[] messages = new Message[threadObjectCount];
-
-            int from = threadParams.getThreadIndex() * threadObjectCount;
-            int to = from + threadObjectCount;
-            for (int i = from, index = 0 ; i < to ; i++, index++) {
-                String id = String.valueOf(i);
-                this.threadIds[index] = id;
-                messages[index] = new Message().setId(id).setPayload("foo");
-            }
-
-            spaceState.gigaSpace.writeMultiple(messages);
+            String id = String.valueOf(threadParams.getThreadIndex());
+            this.threadIds = new String[]{id};
+            spaceState.gigaSpace.write(new Message().setId(id).setPayload("foo"));
         }
 
         public String[] getThreadIds() {
             return threadIds;
         }
     }
-
 
         public static void main(String[] args) throws RunnerException {
 

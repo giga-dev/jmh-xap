@@ -55,28 +55,18 @@ public class TakeByIdsQueryBenchmark {
 
         private String[] threadIds;
         private Message[] threadMessageObjects;
-        @Param({DEFAULT_OBJECT_COUNT})
-        private int threadObjectCount;
 
-        // Each Thread writes 'threadObjectCount' to space, and TakeByIds those objects.
+        // Each Thread writes 1 object to space, and TakeByIds this object.
         @Setup
         public void setup(ThreadParams threadParams) {
-            this.threadIds = new String[threadObjectCount];
-            this.threadMessageObjects = new Message[threadObjectCount];
-
-            int from = threadParams.getThreadIndex() * threadObjectCount;
-            int to = from + threadObjectCount;
-            for (int i = from, index = 0 ; i < to ; i++) {
-                String id = String.valueOf(i);
-                this.threadIds[index] = id;
-                this.threadMessageObjects[index] = new Message().setId(id).setPayload("foo");
-                index++;
-            }
+            String id = String.valueOf(threadParams.getThreadIndex());
+            this.threadIds = new String[]{id};
+            this.threadMessageObjects = new Message[]{new Message().setId(id).setPayload("foo")};
         }
 
         @Setup(Level.Invocation)
         public void doWrite(SpaceState spaceStat) {
-            spaceStat.gigaSpace.writeMultiple(this.threadMessageObjects);
+            spaceStat.gigaSpace.write(this.threadMessageObjects[0]);
         }
 
         public String[] getThreadIds() {
@@ -88,7 +78,6 @@ public class TakeByIdsQueryBenchmark {
         Options opt = new OptionsBuilder()
                 .include(TakeByIdsQueryBenchmark.class.getName())
                 .param(PARAM_MODE, MODE_REMOTE)
-                .param(PARAM_OBJECT_COUNT, DEFAULT_OBJECT_COUNT)
                 .threads(4)
                 .warmupIterations(5).warmupTime(TimeValue.seconds(10))
                 .measurementIterations(5).measurementTime(TimeValue.seconds(10))

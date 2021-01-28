@@ -5,26 +5,26 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
-import sample.ReadByIdBenchmark;
-import sample.ReadByIdsBenchmark;
+import sample.TakeByIdsBenchmark;
+import sample.TakeByIdsQueryBenchmark;
 import utils.Assertions;
 
 import static utils.DefaultProperties.*;
 
-public class CompareReadByIdVsReadByIdsTest {
+public class CompareTakeByIdsVsTakeByIdsQueryTest {
 
     @Test
     public void remotes() throws RunnerException {
-        Options readById = new OptionsBuilder()
-                .include(ReadByIdBenchmark.class.getName())
+        Options takeByIdsQuery = new OptionsBuilder()
+                .include(TakeByIdsQueryBenchmark.class.getName())
                 .param(PARAM_MODE, MODE_REMOTE)
                 .forks(FORKS_DEFAULT)
                 .warmupIterations(WARMUP_ITERATIONS_DEFAULT)
                 .measurementIterations(MEASUREMENT_ITERATIONS_DEFAULT)
                 .build();
 
-        Options readByIds = new OptionsBuilder()
-                .include(ReadByIdsBenchmark.class.getName())
+        Options takeByIds = new OptionsBuilder()
+                .include(TakeByIdsBenchmark.class.getName())
                 .param(PARAM_MODE, MODE_REMOTE)
                 .forks(FORKS_DEFAULT)
                 .warmupIterations(WARMUP_ITERATIONS_DEFAULT)
@@ -32,14 +32,14 @@ public class CompareReadByIdVsReadByIdsTest {
                 .build();
 
         Assertions.assertResults(
-                new Runner(readById).run(),
-                new Runner(readByIds).run());
+                new Runner(takeByIdsQuery).run(),
+                new Runner(takeByIds).run());
     }
 
     @Test
     public void remote_4_threads() throws RunnerException {
-        Options readById = new OptionsBuilder()
-                .include(ReadByIdBenchmark.class.getName())
+        Options takeByIdsQuery = new OptionsBuilder()
+                .include(TakeByIdsQueryBenchmark.class.getName())
                 .param(PARAM_MODE, MODE_REMOTE)
                 .threads(4)
                 .forks(FORKS_DEFAULT)
@@ -47,8 +47,8 @@ public class CompareReadByIdVsReadByIdsTest {
                 .measurementIterations(MEASUREMENT_ITERATIONS_DEFAULT)
                 .build();
 
-        Options readByIds = new OptionsBuilder()
-                .include(ReadByIdsBenchmark.class.getName())
+        Options takeByIds = new OptionsBuilder()
+                .include(TakeByIdsBenchmark.class.getName())
                 .param(PARAM_MODE, MODE_REMOTE)
                 .threads(4)
                 .forks(FORKS_DEFAULT)
@@ -57,8 +57,7 @@ public class CompareReadByIdVsReadByIdsTest {
                 .build();
 
         Assertions.assertResults(
-                new Runner(readById).run(),
-                new Runner(readByIds).run());
+                new Runner(takeByIdsQuery).run(),
+                new Runner(takeByIds).run());
     }
-
 }
