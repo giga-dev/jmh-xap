@@ -88,7 +88,7 @@ public class Assertions {
     }
 
     /** assert results at a predefined Confidence Interval (CI) of 99.9% */
-    private static void assertResults(BaselineStatistics baseStatistics, Statistics currStatistics) {
+    public static void assertResults(BaselineStatistics baseStatistics, Statistics currStatistics) {
 
         final double MAX_DEVIATION = 0.05;
         final double CONFIDENCE_INTERVAL = 0.999;
