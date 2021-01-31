@@ -23,7 +23,7 @@ public class TakeByIdQueryBenchmark {
 
     @Benchmark
     public Object testTakeByIdQuery(SpaceState spaceState, ThreadParams threadParams) {
-        return spaceState.gigaSpace.takeById(new IdQuery<Message>(Message.class, threadParams.getThreadIndex()));
+        return spaceState.gigaSpace.takeById(new IdQuery<Message>(Message.class, String.valueOf(threadParams.getThreadIndex())));
     }
 
 

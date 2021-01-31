@@ -57,7 +57,8 @@ public class TakeByIdBenchmark {
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()
                 .include(TakeByIdBenchmark.class.getName())
-                .param(PARAM_MODE, MODE_EMBEDDED)
+                .param(PARAM_MODE, MODE_REMOTE)
+                .threads(4)
                 .forks(1)
                 .build();
 

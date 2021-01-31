@@ -3,6 +3,7 @@ package sample;
 import model.Message;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.BenchmarkParams;
+import org.openjdk.jmh.infra.ThreadParams;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
@@ -11,7 +12,6 @@ import org.openspaces.core.GigaSpace;
 import utils.GigaSpaceFactory;
 
 import java.rmi.RemoteException;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static utils.DefaultProperties.*;
 
@@ -22,8 +22,8 @@ public class ReadByIdBenchmark {
     private static String mode;
 
     @Benchmark
-    public Object testReadById(SpaceState spaceState) {
-        return spaceState.gigaSpace.readById(Message.class, spaceState.getKey());
+    public Object testReadById(SpaceState spaceState, ThreadParams threadParams) {
+        return spaceState.gigaSpace.readById(Message.class, String.valueOf(threadParams.getThreadIndex()));
     }
 
     @State(Scope.Benchmark)
@@ -51,17 +51,14 @@ public class ReadByIdBenchmark {
                 }
             }
         }
-
-        public String getKey() {
-            return String.valueOf(ThreadLocalRandom.current().nextInt(threadsCount));
-        }
     }
 
 
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()
                 .include(ReadByIdBenchmark.class.getName())
-                .param(PARAM_MODE, MODE_EMBEDDED)
+                .param(PARAM_MODE, MODE_REMOTE)
+                .threads(4)
                 .forks(1)
                 .build();
 

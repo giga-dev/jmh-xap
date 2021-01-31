@@ -3,6 +3,7 @@ package sample;
 import model.Message;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.BenchmarkParams;
+import org.openjdk.jmh.infra.ThreadParams;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
@@ -11,7 +12,6 @@ import org.openspaces.core.GigaSpace;
 import utils.GigaSpaceFactory;
 
 import java.rmi.RemoteException;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static utils.DefaultProperties.*;
 import static utils.DefaultProperties.MODE_EMBEDDED;
@@ -23,21 +23,19 @@ public class ReadByTemplateMatchingOnIdBenchmark {
     private static String mode;
 
     @Benchmark
-    public Object testReadByTemplateMatchingOnIdBenchmark(SpaceState spaceState) {
-        return spaceState.gigaSpace.read(new Message().setId(spaceState.getKey()));
+    public Object testReadByTemplateMatchingOnIdBenchmark(SpaceState spaceState, ThreadParams threadParams) {
+        return spaceState.gigaSpace.read(new Message().setId(String.valueOf(threadParams.getThreadIndex())));
     }
 
     @State(Scope.Benchmark)
     public static class SpaceState {
 
-        private int threadsCount;
         private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace(DEFAULT_SPACE_NAME, mode.equals(MODE_EMBEDDED));
 
         @Setup
         public void setup(BenchmarkParams benchmarkParams) {
             gigaSpace.clear(null);
-            threadsCount = benchmarkParams.getThreads();
-            for(int i = 0 ; i < threadsCount ; i++) {
+            for(int i = 0 ; i < benchmarkParams.getThreads() ; i++) {
                 gigaSpace.write(new Message().setId(String.valueOf(i)).setPayload("foo"));
             }
         }
@@ -51,10 +49,6 @@ public class ReadByTemplateMatchingOnIdBenchmark {
                     System.err.println("failed to shutdown Space" + e);
                 }
             }
-        }
-
-        public String getKey() {
-            return String.valueOf(ThreadLocalRandom.current().nextInt(threadsCount));
         }
     }
 
