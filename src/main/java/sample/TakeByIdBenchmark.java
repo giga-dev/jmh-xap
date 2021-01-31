@@ -17,9 +17,6 @@ import static utils.DefaultProperties.*;
 @State(Scope.Benchmark)
 public class TakeByIdBenchmark {
 
-    @Param({MODE_EMBEDDED, MODE_REMOTE})
-    private static String mode;
-
     @Benchmark
     public Object testTakeById(SpaceState spaceState, ThreadParams threadParams) {
         return spaceState.gigaSpace.takeById(Message.class, String.valueOf(threadParams.getThreadIndex()));
@@ -29,10 +26,14 @@ public class TakeByIdBenchmark {
     @State(Scope.Benchmark)
     public static class SpaceState {
 
-        private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace(DEFAULT_SPACE_NAME, mode.equals(MODE_EMBEDDED));
+        @Param({MODE_EMBEDDED, MODE_REMOTE})
+        private static String mode;
+
+        private GigaSpace gigaSpace;
 
         @Setup
         public void setup() {
+            gigaSpace = GigaSpaceFactory.getOrCreateSpace(DEFAULT_SPACE_NAME, mode.equals(MODE_EMBEDDED));
             gigaSpace.clear(null);
         }
 

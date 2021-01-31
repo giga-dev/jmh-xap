@@ -18,9 +18,6 @@ import static utils.DefaultProperties.MODE_EMBEDDED;
 @State(Scope.Benchmark)
 public class TakeByTemplateMatchingOnIndexBenchmark {
 
-    @Param({MODE_EMBEDDED, MODE_REMOTE})
-    private static String mode;
-
     @Benchmark
     public Object testTakeByTemplateMatchingOnIndex(SpaceState spaceState, ThreadParams threadParams) {
         return spaceState.gigaSpace.take(new Book()
@@ -31,10 +28,14 @@ public class TakeByTemplateMatchingOnIndexBenchmark {
     @State(Scope.Benchmark)
     public static class SpaceState {
 
-        private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace(DEFAULT_SPACE_NAME, mode.equals(MODE_EMBEDDED));
+        @Param({MODE_EMBEDDED, MODE_REMOTE})
+        private static String mode;
+
+        private GigaSpace gigaSpace;
 
         @Setup
         public void setup() {
+            gigaSpace = GigaSpaceFactory.getOrCreateSpace(DEFAULT_SPACE_NAME, mode.equals(MODE_EMBEDDED));
             gigaSpace.clear(null);
         }
 

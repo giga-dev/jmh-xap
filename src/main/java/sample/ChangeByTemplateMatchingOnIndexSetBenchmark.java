@@ -19,9 +19,6 @@ import static utils.DefaultProperties.*;
 @State(Scope.Benchmark)
 public class ChangeByTemplateMatchingOnIndexSetBenchmark {
 
-    @Param({MODE_EMBEDDED, MODE_REMOTE})
-    private static String mode;
-
     @Benchmark
     public Object testChangeByTemplateMatchingOnIndexSet(SpaceState spaceState, ThreadParams threadParams) {
         return spaceState.gigaSpace.change(
@@ -32,10 +29,14 @@ public class ChangeByTemplateMatchingOnIndexSetBenchmark {
     @State(Scope.Benchmark)
     public static class SpaceState {
 
-        private final GigaSpace gigaSpace = GigaSpaceFactory.getOrCreateSpace(DEFAULT_SPACE_NAME, mode.equals(MODE_EMBEDDED));
+        @Param({MODE_EMBEDDED, MODE_REMOTE})
+        private static String mode;
+
+        private GigaSpace gigaSpace;
 
         @Setup
         public void setup(BenchmarkParams benchmarkParams) {
+            gigaSpace = GigaSpaceFactory.getOrCreateSpace(DEFAULT_SPACE_NAME, mode.equals(MODE_EMBEDDED));
             gigaSpace.clear(null);
             for(int i = 0 ; i < benchmarkParams.getThreads() ; i++) {
                 gigaSpace.write(new Book()
