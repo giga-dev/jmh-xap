@@ -1,6 +1,6 @@
 package jmh.benchmarks;
 
-import jmh.model.Message;
+import jmh.model.Book;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.ThreadParams;
 import org.openjdk.jmh.runner.Runner;
@@ -53,17 +53,17 @@ public class ReadMultipleMatchOnIndexBenchmark {
     @State(Scope.Thread)
     public static class ThreadState {
 
-        private Message threadMessageObject;
+        private Book threadBookTemplate;
 
         @Setup
         public void setup(SpaceState spaceStat, ThreadParams threadParams) {
             String id = String.valueOf(threadParams.getThreadIndex());
-            this.threadMessageObject = new Message().setId(id).setPayload("foo");
-            spaceStat.gigaSpace.write(this.threadMessageObject);
+            this.threadBookTemplate = new Book().setAuthor(id);
+            spaceStat.gigaSpace.write(new Book().setId(id).setAuthor(id).setPayload("foo"));
         }
 
-        public Message getTemplate() {
-            return this.threadMessageObject;
+        public Book getTemplate() {
+            return this.threadBookTemplate;
         }
     }
 
