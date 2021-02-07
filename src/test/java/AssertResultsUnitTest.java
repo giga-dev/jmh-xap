@@ -1,6 +1,6 @@
 import org.junit.Test;
-import utils.Assertions;
-import utils.BaselineStatistics;
+import jmh.utils.Assertions;
+import jmh.utils.BaselineStatistics;
 
 /** Tests that Assertions.assertResults returns as expected */
 public class AssertResultsUnitTest {
