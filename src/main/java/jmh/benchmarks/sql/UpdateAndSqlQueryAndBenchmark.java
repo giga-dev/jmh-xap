@@ -56,7 +56,6 @@ public class UpdateAndSqlQueryAndBenchmark {
                 }
             }
         }
-
     }
 
     // Each thread write his own object and then read this object using SQLQuery
@@ -71,13 +70,14 @@ public class UpdateAndSqlQueryAndBenchmark {
         public void setup(SpaceState spaceStat, ThreadParams threadParams) {
             int threadIndex = threadParams.getThreadIndex();
             String name = String.valueOf(threadIndex);
-            double rangeFactor = 0.5d;
             this.personObject = new Person()
                     .setId(threadIndex)
                     .setFirstName(name)
                     .setLastName(name)
-                    .setSalary((double) (threadIndex)); /* SpaceIndexType.EQUAL_AND_ORDERED */
+                    .setSalary((double) (threadIndex));
             spaceStat.gigaSpace.write(this.personObject);
+
+            double rangeFactor = 0.5d;
             this.query.setParameters(threadIndex - rangeFactor , threadIndex + rangeFactor);
         }
 
@@ -88,7 +88,6 @@ public class UpdateAndSqlQueryAndBenchmark {
         public Person getPersonObject() {
             return this.personObject;
         }
-
     }
 
 

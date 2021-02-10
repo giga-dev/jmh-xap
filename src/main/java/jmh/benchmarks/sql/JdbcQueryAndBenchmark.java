@@ -13,6 +13,7 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
+import org.openjdk.jmh.runner.options.TimeValue;
 import org.openspaces.core.GigaSpace;
 
 import java.rmi.RemoteException;
@@ -85,9 +86,7 @@ public class JdbcQueryAndBenchmark {
                 }
             }
         }
-
     }
-
 
     @State(Scope.Thread)
     public static class ThreadState {
@@ -98,24 +97,23 @@ public class JdbcQueryAndBenchmark {
         private PreparedStatement preparedStatement;
         private double minSalary;
         private double maxSalary;
+        private int threadIndex;
 
         @Setup
         public void setup(SpaceState spaceStat, ThreadParams threadParams) throws SQLException {
-            int threadIndex = threadParams.getThreadIndex();
-            String name = String.valueOf(threadIndex);
-            //write Person object
+            this.threadIndex = threadParams.getThreadIndex();
+            String name = String.valueOf(this.threadIndex);
             spaceStat.gigaSpace.write(
                     new Person()
-                            .setId(threadIndex)
-                            .setOrganizationId(threadIndex)
+                            .setId(this.threadIndex)
+                            .setOrganizationId(this.threadIndex)
                             .setFirstName(name)
                             .setLastName(name)
-                            .setSalary((double) (threadIndex))
+                            .setSalary((double) (this.threadIndex))
             );
-            //write Organization object
             spaceStat.gigaSpace.write(
                     new Organization()
-                            .setId(threadIndex)
+                            .setId(this.threadIndex)
                             .setName(name)
             );
 
@@ -130,8 +128,8 @@ public class JdbcQueryAndBenchmark {
                     this.preparedStatement = spaceStat.connection.prepareStatement(innerJoinQuery);
                 }
                 double rangeFactor = 0.5d;
-                this.minSalary = threadIndex - rangeFactor;
-                this.maxSalary = threadIndex + rangeFactor;
+                this.minSalary = this.threadIndex - rangeFactor;
+                this.maxSalary = this.threadIndex + rangeFactor;
                 this.preparedStatement.setDouble(1, this.minSalary);
                 this.preparedStatement.setDouble(2, this.maxSalary);
 
@@ -157,20 +155,19 @@ public class JdbcQueryAndBenchmark {
                     Assert.assertEquals("results length should be 1", 1, people.size());
                     for (Person person : people){
                         if (person != null){
-                            Assert.assertTrue("Wrong result returned!",
+                            Assert.assertTrue("wrong result returned!",
                                     this.minSalary <= person.getSalary() && person.getSalary() <= this.maxSalary);
                         } else {
-                            throw new Exception("person can't be null!");
+                            throw new Exception("result of thread [" + this.threadIndex + "] are null");
                         }
                     }
                     return true;
                 } else {
-                    throw new Exception("people can't be null or empty!");
+                    throw new Exception("results of thread [" + this.threadIndex + "] are null or empty!");
                 }
             }
             return true;
         }
-
     }
 
     public static void main(String[] args) throws RunnerException, SQLException {
@@ -184,18 +181,7 @@ public class JdbcQueryAndBenchmark {
                 .forks(1)
                 .build();
 
-//        new Runner(opt).run();
-
-        Options opt1 = new OptionsBuilder()
-                .include(SqlQueryAndBenchmark.class.getName())
-                .param(PARAM_MODE, MODE_REMOTE)
-//                .warmupIterations(1).warmupTime(TimeValue.seconds(1))
-//                .measurementIterations(1).measurementTime(TimeValue.seconds(1))
-                .threads(4)
-                .forks(1)
-                .build();
-
-        Assertions.assertResults(new Runner(opt).run(), new Runner(opt1).run());
+        new Runner(opt).run();
     }
 
 //    Assert results:
@@ -211,6 +197,22 @@ public class JdbcQueryAndBenchmark {
 //    Avg : testJdbcQueryAnd > testSqlQueryAnd (20552.745/18412.190) = 11.626% - exceeds 5.000%
 //    CI_0: testJdbcQueryAnd > testSqlQueryAnd (19515.438/17480.622) = 11.640% - exceeds 5.000%
 //    CI_1: testJdbcQueryAnd > testSqlQueryAnd (21590.052/19343.758) = 11.612% - exceeds 5.000%
+//    [x] Mean difference is statistically significant
+//
+//      with hard codded SQLQuery:
+//    Assert results:
+//    testJdbcQueryAnd statistics:
+//            (min, avg, max) = (20762.190, 20905.704, 21104.836), stdev = 143.873
+//    CI (99.9%): [20351.699, 21459.708]
+//
+//    testSqlQueryAnd statistics:
+//            (min, avg, max) = (18201.656, 18485.444, 18681.109), stdev = 192.930
+//    CI (99.9%): [17742.538, 19228.350]
+//
+//    Throughput comparison results (maximum allowed deviation 5.0%):
+//    Avg : testJdbcQueryAnd > testSqlQueryAnd (20905.704/18485.444) = 13.093% - exceeds 5.000%
+//    CI_0: testJdbcQueryAnd > testSqlQueryAnd (20351.699/17742.538) = 14.706% - exceeds 5.000%
+//    CI_1: testJdbcQueryAnd > testSqlQueryAnd (21459.708/19228.350) = 11.605% - exceeds 5.000%
 //    [x] Mean difference is statistically significant
 
 }

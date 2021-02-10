@@ -1,6 +1,7 @@
 package jmh.benchmarks.sql;
 
 import com.j_spaces.jdbc.driver.GConnection;
+import com.j_spaces.jdbc.driver.GResultSet;
 import jmh.model.Organization;
 import jmh.model.Person;
 import jmh.utils.GigaSpaceFactory;
@@ -27,7 +28,7 @@ public class JdbcQueryInnerJoinBenchmark {
     @Benchmark
     public void testJdbcQueryInnerJoin(ThreadState threadState, Blackhole bh) throws Exception {
         try (ResultSet resultSet = threadState.getStatement().executeQuery()) {
-//            System.out.println(((GResultSet) resultSet).getResult().toString());
+            System.out.println(((GResultSet) resultSet).getResult().toString());
             // resultSet field order/index:
             // | p.firstName | p.id | p.lastName | p.organizationId | p.salary | o.id | o.name |
             // |      1      |   2  |     3      |        4         |    5     |   6  |   7    |
@@ -39,22 +40,17 @@ public class JdbcQueryInnerJoinBenchmark {
                         .setLastName(resultSet.getString(3))
                         .setOrganizationId(resultSet.getInt(4))
                         .setSalary(resultSet.getDouble(5));
-
-//                System.out.println(p);
                 people.add(p);
 
-                Organization o = new Organization()
-                        .setId(resultSet.getInt(6))
-                        .setName(resultSet.getString(7));
-
-//                System.out.println(o);
-                bh.consume(o);
+//                Organization o = new Organization()
+//                        .setId(resultSet.getInt(6))
+//                        .setName(resultSet.getString(7));
+//                bh.consume(o);
             }
             bh.consume(threadState.validateResults(people));
             bh.consume(people);
         }
     }
-
 
     @State(Scope.Benchmark)
     public static class SpaceState {
@@ -67,10 +63,11 @@ public class JdbcQueryInnerJoinBenchmark {
         private final Object mutex = new Object(); // mutex for 'connection' because its not thread safe.
 
         @Setup
-        public void setup() throws SQLException {
+        public void setup(ThreadParams threadParams) throws SQLException {
             gigaSpace = GigaSpaceFactory.getOrCreateSpace(DEFAULT_SPACE_NAME, mode.equals(MODE_EMBEDDED));
             gigaSpace.clear(null);
             try {
+                System.out.println(" >>> Hey! I'm in Space setup!, my id - "   + threadParams.getThreadIndex());
                 this.connection = GConnection.getInstance(this.gigaSpace.getSpace());
             } catch (SQLException e) {
                 this.connection.close();
@@ -90,9 +87,7 @@ public class JdbcQueryInnerJoinBenchmark {
                 }
             }
         }
-
     }
-
 
     @State(Scope.Thread)
     public static class ThreadState {
@@ -101,59 +96,70 @@ public class JdbcQueryInnerJoinBenchmark {
         private boolean enableValidation;
 
         private PreparedStatement preparedStatement;
+        private Connection connection;
+
         private double minSalary;
         private double maxSalary;
+        private int threadIndex;
 
         @Setup
         public void setup(SpaceState spaceStat, ThreadParams threadParams) throws SQLException {
-            int threadIndex = threadParams.getThreadIndex();
-            String name = String.valueOf(threadIndex);
-            //write Person object
+            this.connection = GConnection.getInstance(spaceStat.gigaSpace.getSpace());
+            this.threadIndex = threadParams.getThreadIndex();
+            String name = String.valueOf(this.threadIndex);
             spaceStat.gigaSpace.write(
                     new Person()
-                            .setId(threadIndex)
-                            .setOrganizationId(threadIndex)
+                            .setId(this.threadIndex)
+                            .setOrganizationId(this.threadIndex)
                             .setFirstName(name)
                             .setLastName(name)
-                            .setSalary((double) (threadIndex))
+                            .setSalary((double) (this.threadIndex))
             );
-            //write Organization object
             spaceStat.gigaSpace.write(
                     new Organization()
-                            .setId(threadIndex)
+                            .setId(this.threadIndex)
                             .setName(name)
             );
 
             //construct PreparedStatement
             try {
                 final String innerJoinQuery =
-                        "SELECT *, count(*) " +
+//                        "SELECT * " +
+//                        "FROM " + Person.class.getName() + " As p, " + Organization.class.getName() + " As o " +
+//                        "WHERE p.id = o.id AND p.salary >= " + (threadIndex - 0.5d) + " AND p.salary <= " + (threadIndex + 0.5d) ;
+
+                        "EXPLAIN PLAN FOR SELECT * " +
                         "FROM " + Person.class.getName() + " As p " +
                         "INNER JOIN " + Organization.class.getName() + " As o " +
                         "ON p.id = o.id " +
-                        "WHERE p.salary >= ? AND p.salary <= ?";
-
+                        "WHERE p.salary >= " + (this.threadIndex - 0.5d) + " AND p.salary <= " + (this.threadIndex + 0.5d);
 
                 //connection not thread safe, use synchronized to get prepareStatement.
-                synchronized (spaceStat.mutex) {
-                    this.preparedStatement = spaceStat.connection.prepareStatement(innerJoinQuery);
-                }
+//                synchronized (spaceStat.mutex) {
+//                    System.out.println(spaceStat.mutex + " " + threadIndex);
+//                    this.preparedStatement = spaceStat.connection.prepareStatement(innerJoinQuery);
+//                }
+
+                this.preparedStatement = this.connection.prepareStatement(innerJoinQuery);
                 double rangeFactor = 0.5d;
-                this.minSalary = threadIndex - rangeFactor;
-                this.maxSalary = threadIndex + rangeFactor;
-                this.preparedStatement.setDouble(1, this.minSalary);
-                this.preparedStatement.setDouble(2, this.maxSalary);
+                this.minSalary = this.threadIndex - rangeFactor;
+                this.maxSalary = this.threadIndex + rangeFactor;
+//                this.preparedStatement.setDouble(1, this.minSalary);
+//                this.preparedStatement.setDouble(2, this.maxSalary);
+                System.out.println(this.preparedStatement + " ps for id " + this.threadIndex);
+                System.out.println(this.connection + " con for id " + this.threadIndex);
 
             } catch (SQLException e) {
+                System.out.println("Here!!! " + this.threadIndex);
                 this.preparedStatement.close();
                 throw e;
             }
-
         }
 
         @TearDown
         public void tearDown() throws SQLException {
             this.preparedStatement.close();
+            this.connection.close();
         }
 
         public PreparedStatement getStatement() {
@@ -166,20 +172,19 @@ public class JdbcQueryInnerJoinBenchmark {
                     Assert.assertEquals("results length should be 1", 1, people.size());
                     for (Person person : people){
                         if (person != null){
-                            Assert.assertTrue("Wrong result returned!",
+                            Assert.assertTrue("wrong result returned",
                                     this.minSalary <= person.getSalary() && person.getSalary() <= this.maxSalary);
                         } else {
-                            throw new Exception("person can't be null!");
+                            throw new Exception("result of thread [" + this.threadIndex + "] are null");
                         }
                     }
                     return true;
                 } else {
-                    throw new Exception("people can't be null or empty!");
+                    throw new Exception("results of thread [" + this.threadIndex + "] are null or empty!");
                 }
             }
             return true;
         }
-
     }
 
     public static void main(String[] args) throws RunnerException, SQLException {
@@ -188,12 +193,11 @@ public class JdbcQueryInnerJoinBenchmark {
                 .param(PARAM_MODE, MODE_REMOTE)
                 .warmupIterations(1).warmupTime(TimeValue.seconds(1))
                 .measurementIterations(1).measurementTime(TimeValue.seconds(1))
-                .param(PARAM_SQL_ENABLE_VALIDATION, SQL_ENABLE_VALIDATION)
+//                .param(PARAM_SQL_ENABLE_VALIDATION, SQL_ENABLE_VALIDATION)
                 .threads(4)
                 .forks(1)
                 .build();
 
         new Runner(opt).run();
-
     }
 }

@@ -28,7 +28,6 @@ public class SqlQueryInBenchmark {
         return people;
     }
 
-
     @State(Scope.Benchmark)
     public static class SpaceState {
 
@@ -53,7 +52,6 @@ public class SqlQueryInBenchmark {
                 }
             }
         }
-
     }
 
     // Each thread write his own object and then read this object using SQLQuery.
@@ -65,25 +63,26 @@ public class SqlQueryInBenchmark {
 
         private final SQLQuery<Person> query = new SQLQuery<>(Person.class, "id IN (?)");
         private HashSet<Integer> idsSet;
+        private int threadIndex;
 
         @Setup
         public void setup(SpaceState spaceStat, ThreadParams threadParams) {
-            HashSet<Integer> idsSet = new HashSet<>();
+            this.idsSet = new HashSet<>();
             for(int i = 0; i < threadParams.getThreadCount(); i++) {
-                idsSet.add(i);
+                this.idsSet.add(i);
             }
 
-            int threadIndex = threadParams.getThreadIndex();
-            String name = String.valueOf(threadIndex);
+            this.threadIndex = threadParams.getThreadIndex();
+            String name = String.valueOf(this.threadIndex);
             spaceStat.gigaSpace.write(
                     new Person()
-                            .setId(threadIndex)
+                            .setId(this.threadIndex)
                             .setFirstName(name)
                             .setLastName(name)
-                            .setSalary((double) (threadIndex))
+                            .setSalary((double) (this.threadIndex))
             );
-            this.idsSet = idsSet;
-            this.query.setParameter(1, idsSet);
+
+            this.query.setParameter(1, this.idsSet);
         }
 
         public SQLQuery<Person> getQuery() {
@@ -96,19 +95,18 @@ public class SqlQueryInBenchmark {
                     Assert.assertEquals(String.format("results length should be %d", this.idsSet.size()), this.idsSet.size(), people.length);
                     for (Person person : people){
                         if (person != null){
-                            Assert.assertTrue("Wrong result returned!",  this.idsSet.contains(person.getId()));
+                            Assert.assertTrue("wrong result returned",  this.idsSet.contains(person.getId()));
                         } else {
-                            throw new Exception("person can't be null!");
+                            throw new Exception("result of thread [" + this.threadIndex + "] are null");
                         }
                     }
                     return true;
                 } else {
-                    throw new Exception("people can't be null or empty!");
+                    throw new Exception("results of thread [" + this.threadIndex + "] are null or empty!");
                 }
             }
             return true;
         }
-
     }
 
     public static void main(String[] args) throws RunnerException {
@@ -117,7 +115,7 @@ public class SqlQueryInBenchmark {
                 .param(PARAM_MODE, MODE_REMOTE)
 //                .warmupIterations(1).warmupTime(TimeValue.seconds(1))
 //                .measurementIterations(1).measurementTime(TimeValue.seconds(1))
-//                .param(PARAM_SQL_ENABLE_VALIDATION, SQL_ENABLE_VALIDATION)
+                .param(PARAM_SQL_ENABLE_VALIDATION, SQL_ENABLE_VALIDATION)
                 .threads(4)
                 .forks(1)
                 .build();

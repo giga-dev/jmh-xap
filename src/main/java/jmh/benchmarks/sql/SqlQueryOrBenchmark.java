@@ -27,7 +27,6 @@ public class SqlQueryOrBenchmark {
         return people;
     }
 
-
     @State(Scope.Benchmark)
     public static class SpaceState {
 
@@ -52,7 +51,6 @@ public class SqlQueryOrBenchmark {
                 }
             }
         }
-
     }
 
     // Each thread write his own object and then read this object using SQLQuery.
@@ -65,21 +63,23 @@ public class SqlQueryOrBenchmark {
         private final SQLQuery<Person> query = new SQLQuery<>(Person.class, "salary = ? OR salary = ?");
         private double firstSalary;
         private double secondSalary;
+        private int threadIndex;
 
 
         @Setup
         public void setup(SpaceState spaceStat, ThreadParams threadParams) {
-            int threadIndex = threadParams.getThreadIndex();
-            String name = String.valueOf(threadIndex);
+            this.threadIndex = threadParams.getThreadIndex();
+            String name = String.valueOf(this.threadIndex);
             spaceStat.gigaSpace.write(
                     new Person()
-                            .setId(threadIndex)
+                            .setId(this.threadIndex)
                             .setFirstName(name)
                             .setLastName(name)
-                            .setSalary((double) (threadIndex))
+                            .setSalary((double) (this.threadIndex))
             );
-            this.firstSalary =  threadIndex;
-            this.secondSalary = threadIndex + 0.1d;
+
+            this.firstSalary =  this.threadIndex;
+            this.secondSalary = this.threadIndex + 0.1d;
             this.query.setParameters(this.firstSalary, this.secondSalary);
         }
 
@@ -93,19 +93,18 @@ public class SqlQueryOrBenchmark {
                     Assert.assertEquals("results length should be 1", 1, people.length);
                     for (Person person : people){
                         if (person != null){
-                            Assert.assertTrue("Wrong result returned", this.firstSalary == person.getSalary() || person.getSalary() == this.secondSalary);
+                            Assert.assertTrue("wrong result returned", this.firstSalary == person.getSalary() || person.getSalary() == this.secondSalary);
                         } else {
-                            throw new Exception("person can't be null");
+                            throw new Exception("result of thread [" + this.threadIndex + "] are null");
                         }
                     }
                     return true;
                 } else {
-                    throw new Exception("people can't be null or empty");
+                    throw new Exception("results of thread [" + this.threadIndex + "] are null or empty!");
                 }
             }
             return true;
         }
-
     }
 
     public static void main(String[] args) throws RunnerException {

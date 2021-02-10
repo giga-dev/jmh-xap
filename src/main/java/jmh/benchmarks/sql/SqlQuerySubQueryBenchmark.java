@@ -28,7 +28,6 @@ public class SqlQuerySubQueryBenchmark {
         return people;
     }
 
-
     @State(Scope.Benchmark)
     public static class SpaceState {
 
@@ -53,15 +52,14 @@ public class SqlQuerySubQueryBenchmark {
                 }
             }
         }
-
     }
 
+    // Each thread write his own object and then read this object using SQLQuery.
     @State(Scope.Thread)
     public static class ThreadState {
 
         @Param({"false"})
         private boolean enableValidation;
-
 
         private final SQLQuery<Person> query = new SQLQuery<>(Person.class,
                 "organizationId = " +
@@ -72,28 +70,29 @@ public class SqlQuerySubQueryBenchmark {
         private double minSalary;
         private double maxSalary;
         private String name;
+        private int threadIndex;
 
         @Setup
         public void setup(SpaceState spaceStat, ThreadParams threadParams) {
-            int threadIndex = threadParams.getThreadIndex();
-            this.name = String.valueOf(threadIndex);
+            this.threadIndex = threadParams.getThreadIndex();
+            this.name = String.valueOf(this.threadIndex);
             spaceStat.gigaSpace.write(
                     new Person()
-                            .setId(threadIndex)
-                            .setOrganizationId(threadIndex)
+                            .setId(this.threadIndex)
+                            .setOrganizationId(this.threadIndex)
                             .setFirstName(this.name)
                             .setLastName(this.name)
-                            .setSalary((double) (threadIndex))
+                            .setSalary((double) (this.threadIndex))
             );
             spaceStat.gigaSpace.write(
                     new Organization()
-                            .setId(threadIndex)
+                            .setId(this.threadIndex)
                             .setName(this.name)
             );
 
             double rangeFactor = 0.5d;
-            this.minSalary = threadIndex - rangeFactor;
-            this.maxSalary = threadIndex + rangeFactor;
+            this.minSalary = this.threadIndex - rangeFactor;
+            this.maxSalary = this.threadIndex + rangeFactor;
             this.query.setParameters(this.name, this.minSalary, this.maxSalary);
         }
 
@@ -107,22 +106,21 @@ public class SqlQuerySubQueryBenchmark {
                     Assert.assertEquals("results length should be 1", 1, people.length);
                     for (Person person : people){
                         if (person != null){
-                            Assert.assertTrue("Wrong result returned!",
+                            Assert.assertTrue("wrong result returned",
                                     this.minSalary <= person.getSalary()
                                             && person.getSalary() <= this.maxSalary
                                             && Integer.parseInt(this.name) == person.getOrganizationId());
                         } else {
-                            throw new Exception("person can't be null!");
+                            throw new Exception("result of thread [" + this.threadIndex + "] are null");
                         }
                     }
                     return true;
                 } else {
-                    throw new Exception("people can't be null or empty!");
+                    throw new Exception("results of thread [" + this.threadIndex + "] are null or empty!");
                 }
             }
             return true;
         }
-
     }
 
     public static void main(String[] args) throws RunnerException {
@@ -131,7 +129,7 @@ public class SqlQuerySubQueryBenchmark {
                 .param(PARAM_MODE, MODE_REMOTE)
 //                .warmupIterations(1).warmupTime(TimeValue.seconds(1))
 //                .measurementIterations(1).measurementTime(TimeValue.seconds(1))
-//                .param(PARAM_SQL_ENABLE_VALIDATION, SQL_ENABLE_VALIDATION)
+                .param(PARAM_SQL_ENABLE_VALIDATION, SQL_ENABLE_VALIDATION)
                 .threads(4)
                 .forks(1)
                 .build();
