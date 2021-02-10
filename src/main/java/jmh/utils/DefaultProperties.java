@@ -11,4 +11,6 @@ public class DefaultProperties {
     public static final String MODE_EMBEDDED="embedded";
     public static final String MODE_REMOTE="remote";
 
+    public static final String PARAM_SQL_ENABLE_VALIDATION = "enableValidation";
+    public static final String SQL_ENABLE_VALIDATION = "true";
 }
