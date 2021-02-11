@@ -22,14 +22,14 @@ import static jmh.utils.DefaultProperties.*;
 public class UpdateAndSqlQueryAndBenchmark {
 
     @Benchmark
-    @Group("PutGetSqlQuery")
+    @Group("PutGetSqlQueryAnd")
     @GroupThreads(1)
     public Object testWrite(SpaceState spaceState, ThreadState threadState) {
         return spaceState.gigaSpace.write(threadState.getPersonObject());
     }
 
     @Benchmark
-    @Group("PutGetSqlQuery")
+    @Group("PutGetSqlQueryAnd")
     @GroupThreads(3)
     public Object testSqlQueryAnd(SpaceState spaceState, ThreadState threadState, Blackhole bh) throws Exception {
         Person[] people = spaceState.gigaSpace.readMultiple(threadState.getQuery());
@@ -71,7 +71,6 @@ public class UpdateAndSqlQueryAndBenchmark {
     public static class ThreadState {
 
         private final SQLQuery<Person> query = new SQLQuery<>(Person.class,"salary >= ? AND salary <= ?");
-        private Person personObject;
         private boolean enableValidation;
         private double minSalary;
         private double maxSalary;
@@ -82,12 +81,13 @@ public class UpdateAndSqlQueryAndBenchmark {
             this.enableValidation = spaceStat.enableValidation;
             this.threadIndex = threadParams.getThreadIndex();
             String name = String.valueOf(this.threadIndex);
-            this.personObject = new Person()
-                    .setId(this.threadIndex)
-                    .setFirstName(name)
-                    .setLastName(name)
-                    .setSalary((double) (this.threadIndex));
-            spaceStat.gigaSpace.write(this.personObject);
+            spaceStat.gigaSpace.write(
+                    new Person()
+                            .setId(this.threadIndex)
+                            .setFirstName(name)
+                            .setLastName(name)
+                            .setSalary((double) (this.threadIndex))
+            );
 
             double rangeFactor = 0.5d;
             this.minSalary = this.threadIndex - rangeFactor;
@@ -100,7 +100,12 @@ public class UpdateAndSqlQueryAndBenchmark {
         }
 
         public Person getPersonObject() {
-            return this.personObject;
+            String name = String.valueOf(this.threadIndex);
+            return  new Person()
+                    .setId(this.threadIndex)
+                    .setFirstName(name)
+                    .setLastName(name)
+                    .setSalary((double) (this.threadIndex));
         }
 
         public boolean validateResults(Person[] people) throws Exception {
