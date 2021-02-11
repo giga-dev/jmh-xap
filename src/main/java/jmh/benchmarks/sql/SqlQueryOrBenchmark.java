@@ -11,6 +11,7 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
+import org.openjdk.jmh.runner.options.TimeValue;
 import org.openspaces.core.GigaSpace;
 
 import java.rmi.RemoteException;
@@ -32,6 +33,8 @@ public class SqlQueryOrBenchmark {
 
         @Param({MODE_EMBEDDED, MODE_REMOTE})
         private static String mode;
+        @Param({"false"})
+        private boolean enableValidation;
 
         private GigaSpace gigaSpace;
 
@@ -57,9 +60,7 @@ public class SqlQueryOrBenchmark {
     @State(Scope.Thread)
     public static class ThreadState {
 
-        @Param({"false"})
         private boolean enableValidation;
-
         private final SQLQuery<Person> query = new SQLQuery<>(Person.class, "salary = ? OR salary = ?");
         private double firstSalary;
         private double secondSalary;
@@ -68,6 +69,7 @@ public class SqlQueryOrBenchmark {
 
         @Setup
         public void setup(SpaceState spaceStat, ThreadParams threadParams) {
+            this.enableValidation = spaceStat.enableValidation;
             this.threadIndex = threadParams.getThreadIndex();
             String name = String.valueOf(this.threadIndex);
             spaceStat.gigaSpace.write(
@@ -79,7 +81,7 @@ public class SqlQueryOrBenchmark {
             );
 
             this.firstSalary =  this.threadIndex;
-            this.secondSalary = this.threadIndex + 0.1d;
+            this.secondSalary = this.threadIndex + 0.1d; //unmatched
             this.query.setParameters(this.firstSalary, this.secondSalary);
         }
 
@@ -88,19 +90,15 @@ public class SqlQueryOrBenchmark {
         }
 
         public boolean validateResults(Person[] people) throws Exception {
-            if (enableValidation) {
+            if (this.enableValidation) {
                 if(people != null && people.length > 0) {
                     Assert.assertEquals("results length should be 1", 1, people.length);
                     for (Person person : people){
-                        if (person != null){
-                            Assert.assertTrue("wrong result returned", this.firstSalary == person.getSalary() || person.getSalary() == this.secondSalary);
-                        } else {
-                            throw new Exception("result of thread [" + this.threadIndex + "] are null");
-                        }
+                        Assert.assertEquals("wrong result returned", this.firstSalary, person.getSalary(), 0.0);
                     }
                     return true;
                 } else {
-                    throw new Exception("results of thread [" + this.threadIndex + "] are null or empty!");
+                    throw new Exception("results of thread [" + this.threadIndex + "] are null or empty");
                 }
             }
             return true;
@@ -111,8 +109,8 @@ public class SqlQueryOrBenchmark {
         Options opt = new OptionsBuilder()
                 .include(SqlQueryOrBenchmark.class.getName())
                 .param(PARAM_MODE, MODE_REMOTE)
-//                .warmupIterations(1).warmupTime(TimeValue.seconds(1))
-//                .measurementIterations(1).measurementTime(TimeValue.seconds(1))
+                .warmupIterations(1).warmupTime(TimeValue.seconds(1))
+                .measurementIterations(1).measurementTime(TimeValue.seconds(1))
                 .param(PARAM_SQL_ENABLE_VALIDATION, SQL_ENABLE_VALIDATION)
                 .threads(4)
                 .forks(1)

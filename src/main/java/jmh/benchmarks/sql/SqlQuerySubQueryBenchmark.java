@@ -12,6 +12,7 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
+import org.openjdk.jmh.runner.options.TimeValue;
 import org.openspaces.core.GigaSpace;
 
 import java.rmi.RemoteException;
@@ -33,6 +34,8 @@ public class SqlQuerySubQueryBenchmark {
 
         @Param({MODE_EMBEDDED, MODE_REMOTE})
         private static String mode;
+        @Param({"false"})
+        private boolean enableValidation;
 
         private GigaSpace gigaSpace;
 
@@ -58,9 +61,7 @@ public class SqlQuerySubQueryBenchmark {
     @State(Scope.Thread)
     public static class ThreadState {
 
-        @Param({"false"})
         private boolean enableValidation;
-
         private final SQLQuery<Person> query = new SQLQuery<>(Person.class,
                 "organizationId = " +
                         "(SELECT o.id " +
@@ -74,6 +75,7 @@ public class SqlQuerySubQueryBenchmark {
 
         @Setup
         public void setup(SpaceState spaceStat, ThreadParams threadParams) {
+            this.enableValidation = spaceStat.enableValidation;
             this.threadIndex = threadParams.getThreadIndex();
             this.name = String.valueOf(this.threadIndex);
             spaceStat.gigaSpace.write(
@@ -101,18 +103,14 @@ public class SqlQuerySubQueryBenchmark {
         }
 
         public boolean validateResults(Person[] people) throws Exception {
-            if (enableValidation) {
+            if (this.enableValidation) {
                 if(people != null && people.length > 0){
                     Assert.assertEquals("results length should be 1", 1, people.length);
                     for (Person person : people){
-                        if (person != null){
-                            Assert.assertTrue("wrong result returned",
-                                    this.minSalary <= person.getSalary()
-                                            && person.getSalary() <= this.maxSalary
-                                            && Integer.parseInt(this.name) == person.getOrganizationId());
-                        } else {
-                            throw new Exception("result of thread [" + this.threadIndex + "] are null");
-                        }
+                        Assert.assertTrue("wrong result returned",
+                                this.minSalary <= person.getSalary()
+                                        && person.getSalary() <= this.maxSalary
+                                        && Integer.parseInt(this.name) == person.getOrganizationId());
                     }
                     return true;
                 } else {

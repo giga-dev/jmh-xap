@@ -11,6 +11,7 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
+import org.openjdk.jmh.runner.options.TimeValue;
 import org.openspaces.core.GigaSpace;
 
 import java.rmi.RemoteException;
@@ -33,6 +34,8 @@ public class SqlQueryInBenchmark {
 
         @Param({MODE_EMBEDDED, MODE_REMOTE})
         private static String mode;
+        @Param({"false"})
+        private boolean enableValidation;
 
         private GigaSpace gigaSpace;
 
@@ -58,15 +61,14 @@ public class SqlQueryInBenchmark {
     @State(Scope.Thread)
     public static class ThreadState {
 
-        @Param({"false"})
         private boolean enableValidation;
-
         private final SQLQuery<Person> query = new SQLQuery<>(Person.class, "id IN (?)");
         private HashSet<Integer> idsSet;
         private int threadIndex;
 
         @Setup
         public void setup(SpaceState spaceStat, ThreadParams threadParams) {
+            this.enableValidation = spaceStat.enableValidation;
             this.idsSet = new HashSet<>();
             for(int i = 0; i < threadParams.getThreadCount(); i++) {
                 this.idsSet.add(i);
@@ -90,19 +92,16 @@ public class SqlQueryInBenchmark {
         }
 
         public boolean validateResults(Person[] people) throws Exception {
-            if (enableValidation) {
+            if (this.enableValidation) {
                 if(people != null && people.length > 0){
                     Assert.assertEquals(String.format("results length should be %d", this.idsSet.size()), this.idsSet.size(), people.length);
                     for (Person person : people){
-                        if (person != null){
-                            Assert.assertTrue("wrong result returned",  this.idsSet.contains(person.getId()));
-                        } else {
-                            throw new Exception("result of thread [" + this.threadIndex + "] are null");
-                        }
+                        Assert.assertTrue("wrong result returned",
+                                this.idsSet.contains(person.getId()));
                     }
                     return true;
                 } else {
-                    throw new Exception("results of thread [" + this.threadIndex + "] are null or empty!");
+                    throw new Exception("results of thread [" + this.threadIndex + "] are null or empty");
                 }
             }
             return true;
@@ -113,8 +112,8 @@ public class SqlQueryInBenchmark {
         Options opt = new OptionsBuilder()
                 .include(SqlQueryInBenchmark.class.getName())
                 .param(PARAM_MODE, MODE_REMOTE)
-//                .warmupIterations(1).warmupTime(TimeValue.seconds(1))
-//                .measurementIterations(1).measurementTime(TimeValue.seconds(1))
+                .warmupIterations(1).warmupTime(TimeValue.seconds(1))
+                .measurementIterations(1).measurementTime(TimeValue.seconds(1))
                 .param(PARAM_SQL_ENABLE_VALIDATION, SQL_ENABLE_VALIDATION)
                 .threads(4)
                 .forks(1)

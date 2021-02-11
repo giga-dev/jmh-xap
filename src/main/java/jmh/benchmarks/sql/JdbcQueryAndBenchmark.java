@@ -29,24 +29,10 @@ import static jmh.utils.DefaultProperties.*;
 public class JdbcQueryAndBenchmark {
 
     @Benchmark
-    public void testJdbcQueryAnd(ThreadState threadState, Blackhole bh) throws Exception {
+    public Object testJdbcQueryAnd(ThreadState threadState, Blackhole bh) throws Exception {
         try (ResultSet resultSet = threadState.getStatement().executeQuery()) {
-//            System.out.println(((GResultSet) resultSet).getResult().toString());
-            ArrayList<Person> people = new ArrayList<>();
-            // resultSet field order/index:
-            // | p.firstName | p.id | p.lastName | p.organizationId | p.salary |
-            // |      1      |   2  |     3      |        4         |    5     |
-            while (resultSet.next()) {
-                 Person p = new Person()
-                        .setFirstName(resultSet.getString(1))
-                        .setId(resultSet.getInt(2))
-                        .setLastName(resultSet.getString(3))
-                        .setOrganizationId(resultSet.getInt(4))
-                        .setSalary(resultSet.getDouble(5));
-                people.add(p);
-            }
-            bh.consume(threadState.validateResults(people));
-            bh.consume(people);
+            bh.consume(threadState.validateResults(resultSet));
+            return resultSet;
         }
     }
 
@@ -57,6 +43,8 @@ public class JdbcQueryAndBenchmark {
 
         @Param({MODE_EMBEDDED, MODE_REMOTE})
         private static String mode;
+        @Param({"false"})
+        private boolean enableValidation;
 
         private GigaSpace gigaSpace;
         private Connection connection;
@@ -66,17 +54,14 @@ public class JdbcQueryAndBenchmark {
         public void setup() throws SQLException {
             gigaSpace = GigaSpaceFactory.getOrCreateSpace(DEFAULT_SPACE_NAME, mode.equals(MODE_EMBEDDED));
             gigaSpace.clear(null);
-            try {
-                this.connection = GConnection.getInstance(this.gigaSpace.getSpace());
-            } catch (SQLException e) {
-                this.connection.close();
-                throw e;
-            }
+            this.connection = GConnection.getInstance(this.gigaSpace.getSpace());
         }
 
         @TearDown
         public void teardown() throws SQLException {
-            this.connection.close();
+            if (this.connection != null) {
+                this.connection.close();
+            }
 
             if (mode.equals(MODE_EMBEDDED)) {
                 try {
@@ -91,9 +76,7 @@ public class JdbcQueryAndBenchmark {
     @State(Scope.Thread)
     public static class ThreadState {
 
-        @Param({"false"})
         private boolean enableValidation;
-
         private PreparedStatement preparedStatement;
         private double minSalary;
         private double maxSalary;
@@ -101,6 +84,7 @@ public class JdbcQueryAndBenchmark {
 
         @Setup
         public void setup(SpaceState spaceStat, ThreadParams threadParams) throws SQLException {
+            this.enableValidation = spaceStat.enableValidation;
             this.threadIndex = threadParams.getThreadIndex();
             String name = String.valueOf(this.threadIndex);
             spaceStat.gigaSpace.write(
@@ -118,52 +102,56 @@ public class JdbcQueryAndBenchmark {
             );
 
             //construct PreparedStatement
-            try {
-                final String innerJoinQuery =
-                        "SELECT * " +
-                        "FROM " + Person.class.getName() + " " +
-                        "WHERE salary >= ? AND salary <= ?";
-                //connection not thread safe, use synchronized to get prepareStatement.
-                synchronized (spaceStat.mutex) {
-                    this.preparedStatement = spaceStat.connection.prepareStatement(innerJoinQuery);
-                }
-                double rangeFactor = 0.5d;
-                this.minSalary = this.threadIndex - rangeFactor;
-                this.maxSalary = this.threadIndex + rangeFactor;
-                this.preparedStatement.setDouble(1, this.minSalary);
-                this.preparedStatement.setDouble(2, this.maxSalary);
-
-            } catch (SQLException e) {
-                this.preparedStatement.close();
-                throw e;
+            final String innerJoinQuery =
+                    "SELECT * " +
+                    "FROM " + Person.class.getName() + " " +
+                    "WHERE salary >= ? AND salary <= ?";
+            //connection not thread safe, use synchronized to get prepareStatement.
+            synchronized (spaceStat.mutex) {
+                this.preparedStatement = spaceStat.connection.prepareStatement(innerJoinQuery);
             }
-
+            double rangeFactor = 0.5d;
+            this.minSalary = this.threadIndex - rangeFactor;
+            this.maxSalary = this.threadIndex + rangeFactor;
+            this.preparedStatement.setDouble(1, this.minSalary);
+            this.preparedStatement.setDouble(2, this.maxSalary);
         }
 
         @TearDown
         public void tearDown() throws SQLException {
-            this.preparedStatement.close();
+            if(this.preparedStatement != null) {
+                this.preparedStatement.close();
+            }
         }
 
         public PreparedStatement getStatement() {
             return this.preparedStatement;
         }
 
-        public boolean validateResults(ArrayList<Person> people) throws Exception {
-            if (enableValidation) {
-                if(people != null && people.size() > 0){
+        public boolean validateResults(ResultSet resultSet) throws Exception {
+            if (this.enableValidation) {
+                // resultSet field order/index:
+                // | p.firstName | p.id | p.lastName | p.organizationId | p.salary |
+                // |      1      |   2  |     3      |        4         |    5     |
+                ArrayList<Person> people = new ArrayList<>();
+                while (resultSet.next()) {
+                    Person p = new Person()
+                            .setFirstName(resultSet.getString(1))
+                            .setId(resultSet.getInt(2))
+                            .setLastName(resultSet.getString(3))
+                            .setOrganizationId(resultSet.getInt(4))
+                            .setSalary(resultSet.getDouble(5));
+                    people.add(p);
+                }
+                if(people.size() > 0){
                     Assert.assertEquals("results length should be 1", 1, people.size());
                     for (Person person : people){
-                        if (person != null){
-                            Assert.assertTrue("wrong result returned!",
-                                    this.minSalary <= person.getSalary() && person.getSalary() <= this.maxSalary);
-                        } else {
-                            throw new Exception("result of thread [" + this.threadIndex + "] are null");
-                        }
+                        Assert.assertTrue("wrong result returned",
+                                this.minSalary <= person.getSalary() && person.getSalary() <= this.maxSalary);
                     }
                     return true;
                 } else {
-                    throw new Exception("results of thread [" + this.threadIndex + "] are null or empty!");
+                    throw new Exception("results of thread [" + this.threadIndex + "] are empty");
                 }
             }
             return true;
@@ -174,8 +162,8 @@ public class JdbcQueryAndBenchmark {
         Options opt = new OptionsBuilder()
                 .include(JdbcQueryAndBenchmark.class.getName())
                 .param(PARAM_MODE, MODE_REMOTE)
-//                .warmupIterations(1).warmupTime(TimeValue.seconds(1))
-//                .measurementIterations(1).measurementTime(TimeValue.seconds(1))
+                .warmupIterations(1).warmupTime(TimeValue.seconds(1))
+                .measurementIterations(1).measurementTime(TimeValue.seconds(1))
                 .param(PARAM_SQL_ENABLE_VALIDATION, SQL_ENABLE_VALIDATION)
                 .threads(4)
                 .forks(1)
@@ -183,36 +171,4 @@ public class JdbcQueryAndBenchmark {
 
         new Runner(opt).run();
     }
-
-//    Assert results:
-//    testJdbcQueryAnd statistics:
-//            (min, avg, max) = (20098.201, 20552.745, 20795.701), stdev = 269.385
-//    CI (99.9%): [19515.438, 21590.052]
-//
-//    testSqlQueryAnd statistics:
-//            (min, avg, max) = (18050.561, 18412.190, 18655.789), stdev = 241.925
-//    CI (99.9%): [17480.622, 19343.758]
-//
-//    Throughput comparison results (maximum allowed deviation 5.0%):
-//    Avg : testJdbcQueryAnd > testSqlQueryAnd (20552.745/18412.190) = 11.626% - exceeds 5.000%
-//    CI_0: testJdbcQueryAnd > testSqlQueryAnd (19515.438/17480.622) = 11.640% - exceeds 5.000%
-//    CI_1: testJdbcQueryAnd > testSqlQueryAnd (21590.052/19343.758) = 11.612% - exceeds 5.000%
-//    [x] Mean difference is statistically significant
-//
-//      with hard codded SQLQuery:
-//    Assert results:
-//    testJdbcQueryAnd statistics:
-//            (min, avg, max) = (20762.190, 20905.704, 21104.836), stdev = 143.873
-//    CI (99.9%): [20351.699, 21459.708]
-//
-//    testSqlQueryAnd statistics:
-//            (min, avg, max) = (18201.656, 18485.444, 18681.109), stdev = 192.930
-//    CI (99.9%): [17742.538, 19228.350]
-//
-//    Throughput comparison results (maximum allowed deviation 5.0%):
-//    Avg : testJdbcQueryAnd > testSqlQueryAnd (20905.704/18485.444) = 13.093% - exceeds 5.000%
-//    CI_0: testJdbcQueryAnd > testSqlQueryAnd (20351.699/17742.538) = 14.706% - exceeds 5.000%
-//    CI_1: testJdbcQueryAnd > testSqlQueryAnd (21459.708/19228.350) = 11.605% - exceeds 5.000%
-//    [x] Mean difference is statistically significant
-
 }
